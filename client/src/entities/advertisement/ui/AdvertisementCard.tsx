@@ -50,20 +50,18 @@ export const AdvertisementCard = ({ id, name, description, price, views, likes, 
         }
       </Card.Section>
 
-      { (views || likes)
-        ? <Card.Section className={classes.section}>
-          <Group justify="space-between" mt="md">
-            <Group justify="flex-end">
-              { Number(views) ? <Group gap="xs" justify="flex-start"><IconEye />{ views }</Group> : null }
-              { Number(likes) ? <Group gap="xs" justify="flex-start"><IconHeart />{ likes }</Group> : null }
-            </Group>
-
-            {/* @todo move link generation into upper scope */}
-            { <Button component="a" href={"../" + `orders?forItem=${id}`}>Заказы</Button> }
-
+      { <Card.Section className={classes.section}>
+        <Group justify="space-between" mt="md">
+          <Group justify="flex-end">
+            { Number(views) ? <Group gap="xs" justify="flex-start"><IconEye />{ views }</Group> : null }
+            { Number(likes) ? <Group gap="xs" justify="flex-start"><IconHeart />{ likes }</Group> : null }
           </Group>
-        </Card.Section>
-        : null
+
+          {/* @todo move link generation into upper scope */}
+          { <Button component="a" href={"../" + `orders?forItem=${id}`}>Заказы</Button> }
+
+        </Group>
+      </Card.Section>
       }
     </Card>
   );
