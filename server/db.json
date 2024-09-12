@@ -23,7 +23,7 @@
     {
       "id": "3",
       "name": "Плащ невидимка",
-      "price": 10000010,
+      "price": 10000100,
       "createdAt": "2024-08-12T20:16:55.351Z",
       "views": 900,
       "likes": 19,
@@ -10107,6 +10107,16 @@
       "views": 21,
       "likes": 0,
       "imageUrl": "http://dummyimage.com/209x100.png/5fa2dd/ffffff"
+    },
+    {
+      "id": "6dd0",
+      "name": "Слон",
+      "description": "Купи слона, ну купи",
+      "price": 20000000,
+      "createdAt": "2024-09-12T13:25:55.952Z",
+      "likes": 0,
+      "views": 0,
+      "imageUrl": "https://hatrabbits.com/wp-content/uploads/2017/01/random.jpg"
     }
   ],
   "orders": [
@@ -40366,7 +40376,7 @@
     },
     {
       "id": "479",
-      "status": 3,
+      "status": 4,
       "createdAt": "2024-08-01T07:02:31Z",
       "finishedAt": "2024-08-12T00:00:00Z",
       "total": 49538,
