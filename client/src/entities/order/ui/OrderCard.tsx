@@ -53,7 +53,7 @@ export const OrderCard = (order: Order) => {
         <Accordion chevronPosition="right">
           {
             order.items.map((item) => {
-              return <Accordion.Item value={item.id} key={"item-" + item.id + "-in-order-" + order.id}>
+              return <Accordion.Item value={String(item.id)} key={"item-" + item.id + "-in-order-" + order.id}>
                 <Accordion.Control>
                   <Group wrap="nowrap">
                     <Image src={item.imageUrl} radius="md" style={{ "fontSize": "0.8rem", "display": "block", "width": "56px", "flexBasis": "56px", "height": "56px" }} />
