@@ -21,7 +21,7 @@ export const AdvertisementsPage = () => {
     updateMinMaxValues(isMinMaxValuesLoading, minMaxValueError, { minValueItem, maxValueItem, field, rangeLink: value });
   });
 
-  const { data, isLoading, error } = useAdvertisements(settings);
+  const { data, allItems, isLoading, isAllItemsLoading, error, allItemsError } = useAdvertisements(settings);
   useEffect(() => {
     if (!isLoading && !error && data) {
       dispatch({ type: "pagesCount", value: data.pages });
@@ -33,9 +33,13 @@ export const AdvertisementsPage = () => {
     if (!isLoading && !error && data) {
       let pagesCount = data.pages;
 
-      if (settings.query && settings.query.length > 2) {
+      if (
+        settings.query
+        && settings.query.length > 2
+        && !isAllItemsLoading
+      ) {
         const searchReg = new RegExp(settings.query, "i");
-        settings.filteredAdvertisements = data.data.filter((advertisement) => {
+        settings.filteredAdvertisements = allItems.filter((advertisement) => {
           return advertisement.name.toLowerCase().match(searchReg);
         });
         pagesCount = Math.ceil(settings.filteredAdvertisements.length / settings.paginationSize);
@@ -45,7 +49,7 @@ export const AdvertisementsPage = () => {
 
       dispatch({ type: "pagesCount", value: pagesCount });
     }
-  }, [data, isLoading, settings.query]);
+  }, [data, allItems, isLoading, isAllItemsLoading, settings.query]);
 
   return <AppSlots
     adaptiveSidebar={

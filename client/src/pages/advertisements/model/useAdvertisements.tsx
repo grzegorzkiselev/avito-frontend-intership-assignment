@@ -28,6 +28,15 @@ export const useAdvertisements = ({ page, paginationSize, sort, priceRange, like
     queryFn: () => getAdvertisements("?" + params.toString()),
   });
 
+  const {
+    data: allItems,
+    isLoading: isAllItemsLoading,
+    error: allItemsError,
+  } = useQuery({
+    queryKey: [ADVERTISEMENTS_PROPS.endpoint],
+    queryFn: () => getAdvertisements(""),
+  });
+
   const baseParamsEntries = params.entries();
 
   const nextPageParams = new URLSearchParams([
@@ -54,5 +63,5 @@ export const useAdvertisements = ({ page, paginationSize, sort, priceRange, like
     });
   }
 
-  return { data, isLoading, error };
+  return { data, allItems, isLoading, isAllItemsLoading, error: allItemsError };
 };
