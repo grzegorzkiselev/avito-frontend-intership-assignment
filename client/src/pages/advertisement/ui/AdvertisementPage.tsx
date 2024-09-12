@@ -15,7 +15,7 @@ export const AdvertisementPage = () => {
     links={
       <>
         <StyledNavLink href={"../" + ADVERTISEMENTS_PROPS.slug + "/"} label="Объявления" component="a" />
-        <StyledNavLink to={ORDERS_PROPS.slug + "/"} label="Заказы" component={Link} />
+        <StyledNavLink to={"../" + ORDERS_PROPS.slug + "/"} label="Заказы" component={Link} />
       </>
     }
     sidebar={
