@@ -107,7 +107,6 @@ export const initialSettings = (() => {
   return prepare;
 })();
 
-/** god give me strength */
 export const reducer = <S extends typeof initialSettings, T extends keyof typeof initialSettings>(settings: S, action: { type: T, value: S[T] }) => {
   if (action.type === "sortLabel") {
     settings.sortLabel = (Array.from(action.value.target.children).find((element) => element.selected)).value;
