@@ -9,48 +9,54 @@ import { initialSettings, reducer, sortConfig, statusSelectConfig, useOrders } f
 export const OrdersPage = () => {
   const [settings, dispatch] = useReducer(reducer, initialSettings);
   const { data, isLoading, error, allItems, isAllItemsLoading, allItemsError } = useOrders(settings);
-  const [isCustomLoading, setIsCustomLoading] = useState(() => true);
+  const [isCustomLoading, setIsCustomLoading] = useState(true);
 
   const timerId = useRef(null);
 
   /** @todo reuse this logic */
   useEffect(() => {
-    setIsCustomLoading(() => true);
+    if (!settings.forItem) {
+      setIsCustomLoading(false);
+      settings.filteredOrders = null;
+
+      if (!isLoading && !error && data) {
+        dispatch({ type: "pagesCount", value: data.pages });
+      }
+    }
 
     if (
       settings.forItem
       && !isAllItemsLoading
       && !allItemsError
     ) {
-
-      settings.filteredOrders = [];
+      setIsCustomLoading(true);
+      console.log(1, isCustomLoading);
 
       timerId.current = setTimeout(() => {
+        const filteredOrders = [];
+
         for (const order of allItems) {
           for (const item of order.items) {
             if (item.id == settings.forItem) {
-              settings.filteredOrders.push(order);
+              filteredOrders.push(order);
+              // console.log(order)
               break;
             }
           }
         }
 
-        console.log(settings.filteredOrders);
+        settings.filteredOrders = filteredOrders;
 
-        pagesCount = Math.ceil(settings.filteredOrders.length / settings.paginationSize);
+        console.log(settings.filteredOrders)
+
+        const pagesCount = Math.ceil(settings.filteredOrders.length / settings.paginationSize);
 
         dispatch({ type: "pagesCount", value: pagesCount });
 
-        setIsCustomLoading(() => false);
-      }, 0);
-    } else {
-      settings.filteredOrders = null;
-    }
+        setIsCustomLoading(false);
 
-    if (!isLoading && !error && data) {
-      const pagesCount = data.pages;
-      dispatch({ type: "pagesCount", value: pagesCount });
-      setIsCustomLoading(() => false);
+        console.log(2, isCustomLoading);
+      });
     }
 
     return () => {
@@ -70,7 +76,7 @@ export const OrdersPage = () => {
     <Stack>
       <>
         {
-          isLoading || isCustomLoading
+          (console.log(isCustomLoading, isLoading), isCustomLoading || isLoading)
             ? <CenteredLoader />
             : error
               ? <Alert variant="light" color="red" radius="md">
