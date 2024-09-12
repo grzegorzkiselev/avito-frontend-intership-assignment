@@ -1,9 +1,9 @@
-import { Alert, Center, NativeSelect, Pagination, Stack, Text } from "@mantine/core";
+import { Alert, Center, NativeSelect, Stack, Text } from "@mantine/core";
 import { useEffect, useReducer } from "react";
 import { AppSlots } from "../../../app";
 import { OrderCard } from "../../../entities";
 import { CenteredLoader, DEFAULT_PAGINATION_OPTIONS } from "../../../shared";
-import { PaginationSelector } from "../../../widgets";
+import { Pagination, PaginationSelector } from "../../../widgets";
 import { initialSettings, reducer, sortConfig, statusSelectConfig, useOrders } from "../model";
 
 export const OrdersPage = () => {
@@ -28,14 +28,15 @@ export const OrdersPage = () => {
         }
         pagesCount = Math.ceil(settings.filteredOrders.length / settings.paginationSize);
       }
+
       dispatch({ type: "pagesCount", value: pagesCount });
     }
-  }, [data, isLoading]);
+  }, [data, isLoading, data]);
 
   return <AppSlots
     adaptiveSidebar={
       <Stack>
-        <PaginationSelector paginationOptions={DEFAULT_PAGINATION_OPTIONS} value={settings.paginationSize} dispatch={dispatch}/>
+        <PaginationSelector paginationOptions={DEFAULT_PAGINATION_OPTIONS} value={settings.paginationSize} dispatch={dispatch} />
         <NativeSelect value={settings.sortLabel} onChange={(event) => dispatch({ type: "sortLabel", value: event })} label="Сортировать" data={Object.getOwnPropertyNames(sortConfig)} />
         <NativeSelect value={settings.statusLabel} onChange={(event) => dispatch({ type: "statusLabel", value: event })} label="Со статусом" data={statusSelectConfig} />
       </Stack>
