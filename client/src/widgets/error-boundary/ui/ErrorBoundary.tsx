@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { ErrorMessage } from "../../../shared";
 
 export class ErrorBoundary extends Component {
   constructor(props) {
@@ -10,13 +11,9 @@ export class ErrorBoundary extends Component {
     return { hasError: true, error: error };
   }
 
-  componentDidCatch(error, errorInfo) {
-    // You can also log the error to an error reporting service
-  }
-
   render() {
     if (this.state.hasError) {
-      return <pre>{ JSON.stringify(this.state.error, null, 2) }</pre>;
+      return <ErrorMessage>{ JSON.stringify(this.state, null, 2) }</ErrorMessage>;
     }
 
     return this.props.children;
