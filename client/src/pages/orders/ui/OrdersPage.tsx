@@ -1,5 +1,5 @@
 import { Alert, Center, NativeSelect, Stack, Text } from "@mantine/core";
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { AppSlots } from "../../../app";
 import { OrderCard } from "../../../entities";
 import { CenteredLoader, DEFAULT_PAGINATION_OPTIONS } from "../../../shared";
@@ -8,30 +8,55 @@ import { initialSettings, reducer, sortConfig, statusSelectConfig, useOrders } f
 
 export const OrdersPage = () => {
   const [settings, dispatch] = useReducer(reducer, initialSettings);
-  const { data, isLoading, error } = useOrders(settings);
+  const { data, isLoading, error, allItems, isAllItemsLoading, allItemsError } = useOrders(settings);
+  const [isCustomLoading, setIsCustomLoading] = useState(() => true);
+
+  const timerId = useRef(null);
 
   /** @todo reuse this logic */
   useEffect(() => {
-    if (!isLoading && !error && data) {
-      let pagesCount = data.pages;
+    setIsCustomLoading(() => true);
 
-      if (settings.forItem) {
-        settings.filteredOrders = [];
-        for (const order of data.data) {
+    if (
+      settings.forItem
+      && !isAllItemsLoading
+      && !allItemsError
+    ) {
+
+      settings.filteredOrders = [];
+
+      timerId.current = setTimeout(() => {
+        for (const order of allItems) {
           for (const item of order.items) {
-
             if (item.id == settings.forItem) {
               settings.filteredOrders.push(order);
               break;
             }
           }
         }
-        pagesCount = Math.ceil(settings.filteredOrders.length / settings.paginationSize);
-      }
 
-      dispatch({ type: "pagesCount", value: pagesCount });
+        console.log(settings.filteredOrders);
+
+        pagesCount = Math.ceil(settings.filteredOrders.length / settings.paginationSize);
+
+        dispatch({ type: "pagesCount", value: pagesCount });
+
+        setIsCustomLoading(() => false);
+      }, 0);
+    } else {
+      settings.filteredOrders = null;
     }
-  }, [data, isLoading, data]);
+
+    if (!isLoading && !error && data) {
+      const pagesCount = data.pages;
+      dispatch({ type: "pagesCount", value: pagesCount });
+      setIsCustomLoading(() => false);
+    }
+
+    return () => {
+      clearTimeout(timerId.current);
+    };
+  }, [data, isLoading, error, allItems, isAllItemsLoading, allItemsError]);
 
   return <AppSlots
     adaptiveSidebar={
@@ -45,7 +70,7 @@ export const OrdersPage = () => {
     <Stack>
       <>
         {
-          isLoading
+          isLoading || isCustomLoading
             ? <CenteredLoader />
             : error
               ? <Alert variant="light" color="red" radius="md">

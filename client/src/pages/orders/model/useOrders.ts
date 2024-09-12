@@ -21,6 +21,15 @@ export const useOrders = ({ page, paginationSize, sort, status, forItem }) => {
     queryFn: () => getOrders("?" + params.toString()),
   });
 
+  const {
+    data: allItems,
+    isLoading: isAllItemsLoading,
+    error: allItemsError,
+  } = useQuery({
+    queryKey: [ORDERS_PROPS.endpoint],
+    queryFn: () => getOrders(""),
+  });
+
   const baseParamsEntries = params.entries();
 
   const nextPageParams = new URLSearchParams([
@@ -47,5 +56,5 @@ export const useOrders = ({ page, paginationSize, sort, status, forItem }) => {
     });
   }
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, allItems, isAllItemsLoading, allItemsError };
 };
