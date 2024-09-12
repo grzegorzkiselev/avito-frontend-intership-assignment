@@ -1,3 +1,14 @@
+# VAT.io
+
+Не буду лишать вас соблазна поразмышлять о сути названия
+
+## Запуск
+
+`git clone https://gitverse.ru/grzegorzkiselev/avito-frontend-intership-assignment.git`
+`cd avito-frontend-intership-assignment`
+`npm i`
+`npm run dev`
+
 ## Devlog
 
 ### Подготовка
