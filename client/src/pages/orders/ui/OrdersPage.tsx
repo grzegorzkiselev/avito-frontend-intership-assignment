@@ -12,11 +12,26 @@ export const OrdersPage = () => {
   const [isCustomLoading, setIsCustomLoading] = useState(true);
 
   const timerId = useRef(null);
+  const findIncludesItem = () => {
+    const filteredOrders = [];
+    for (const order of allItems) {
+      for (const item of order.items) {
+        if (item.id == settings.forItem) {
+          filteredOrders.push(order);
+          break;
+        }
+      }
+    }
+    settings.filteredOrders = filteredOrders;
+    const pagesCount = Math.ceil(settings.filteredOrders.length / settings.paginationSize);
+    dispatch({ type: "pagesCount", value: pagesCount });
+    setIsCustomLoading(() => false);
+  }
 
   /** @todo reuse this logic */
   useEffect(() => {
     if (!settings.forItem) {
-      setIsCustomLoading(false);
+      setIsCustomLoading(() => false);
       settings.filteredOrders = null;
 
       if (!isLoading && !error && data) {
@@ -29,39 +44,11 @@ export const OrdersPage = () => {
       && !isAllItemsLoading
       && !allItemsError
     ) {
-      setIsCustomLoading(true);
-      console.log(1, isCustomLoading);
-
-      timerId.current = setTimeout(() => {
-        const filteredOrders = [];
-
-        for (const order of allItems) {
-          for (const item of order.items) {
-            if (item.id == settings.forItem) {
-              filteredOrders.push(order);
-              // console.log(order)
-              break;
-            }
-          }
-        }
-
-        settings.filteredOrders = filteredOrders;
-
-        console.log(settings.filteredOrders)
-
-        const pagesCount = Math.ceil(settings.filteredOrders.length / settings.paginationSize);
-
-        dispatch({ type: "pagesCount", value: pagesCount });
-
-        setIsCustomLoading(false);
-
-        console.log(2, isCustomLoading);
-      });
+      setIsCustomLoading(() => true);
+      timerId.current = setTimeout(findIncludesItem);
     }
 
-    return () => {
-      clearTimeout(timerId.current);
-    };
+    return () => { clearTimeout(timerId.current) }
   }, [data, isLoading, error, allItems, isAllItemsLoading, allItemsError]);
 
   return <AppSlots
