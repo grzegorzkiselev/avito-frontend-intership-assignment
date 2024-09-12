@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { DEFAULT_PAGINATION_SIZE, ORDERS_PROPS, queryClient } from "../../../shared";
 import { getOrders } from "../api";
 
-export const useOrders = ({ page, paginationSize, sort, status, forItem }) => {
+export const useOrders = ({ page, paginationSize, sort, status }) => {
   const params = new URLSearchParams();
   paginationSize = paginationSize ?? DEFAULT_PAGINATION_SIZE;
   params.set("_page", "" + page);

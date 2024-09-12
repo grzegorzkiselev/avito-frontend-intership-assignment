@@ -44,10 +44,10 @@ export const AdvertisementsPage = () => {
           return advertisement.name.toLowerCase().match(searchReg);
         });
         pagesCount = Math.ceil(filteredAdvertisements.length / settings.paginationSize);
-        dispatch({ type: "filteredAdvertisements", value: filteredAdvertisements })
+        dispatch({ type: "filteredAdvertisements", value: filteredAdvertisements });
 
         if (settings.page > pagesCount) {
-          dispatch({ type: "page", value: pagesCount })
+          dispatch({ type: "page", value: pagesCount });
         }
       } else {
         settings.filteredAdvertisements = null;
@@ -57,13 +57,8 @@ export const AdvertisementsPage = () => {
     }
   }, [data, allItems, isLoading, isAllItemsLoading, settings.query]);
 
-  useEffect(() => {
-    console.log("qch")
-  }, [settings.query])
-
   const first = (settings.page - 1) * settings.paginationSize;
   const last = first + settings.paginationSize;
-  console.log("bothered", first, last, settings.filteredAdvertisements)
 
   return <AppSlots
     adaptiveSidebar={
