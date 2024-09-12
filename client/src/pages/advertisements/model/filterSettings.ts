@@ -135,7 +135,7 @@ export const reducer = <S extends typeof initialSettings, T extends keyof typeof
 
   /** workarount for happy-dom */
   try {
-    window?.history?.pushState(null, "", currentUrl);
+    window?.history?.replaceState(null, "", currentUrl);
   } catch(error) {}
 
   return { ...settings };
