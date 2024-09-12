@@ -28,9 +28,11 @@ export const AdvertisementsPage = () => {
     }
   }, [data, isLoading]);
 
+  /** @todo reuse this logic */
   useEffect(() => {
     if (!isLoading && !error && data) {
       let pagesCount = data.pages;
+
       if (settings.query && settings.query.length > 2) {
         const searchReg = new RegExp(settings.query, "i");
         settings.filteredAdvertisements = data.data.filter((advertisement) => {

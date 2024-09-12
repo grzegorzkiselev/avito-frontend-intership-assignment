@@ -1,15 +1,16 @@
-import { Alert, Center, NativeSelect, Stack, Text } from "@mantine/core";
+import { Alert, Center, NativeSelect, Pagination, Stack, Text } from "@mantine/core";
 import { useEffect, useReducer } from "react";
 import { AppSlots } from "../../../app";
 import { OrderCard } from "../../../entities";
 import { CenteredLoader } from "../../../shared";
-import { Pagination, PaginationSelector } from "../../../widgets";
+import { PaginationSelector } from "../../../widgets";
 import { initialSettings, reducer, sortConfig, statusSelectConfig, useOrders } from "../model";
 
 export const OrdersPage = () => {
   const [settings, dispatch] = useReducer(reducer, initialSettings);
   const { data, isLoading, error } = useOrders(settings);
 
+  /** @todo reuse this logic */
   useEffect(() => {
     if (!isLoading && !error && data) {
       let pagesCount = data.pages;
