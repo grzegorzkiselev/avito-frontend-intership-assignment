@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "dev:client": "npm run dev --workspace=client",
+    "server": "npm run server --workspace=server",
+    "dev": "npm run server & npm run dev:client"
+  },
+  "workspaces": [
+    "./client",
+    "./server"
+  ]
+}
