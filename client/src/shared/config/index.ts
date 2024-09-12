@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_ORIGIN;
+export const API_BASE_URL = import.meta.env.VITE_API_ORIGIN || "http://localhost:3000";
 export const BASE_ROOT = "/";
 export const DEFAULT_PAGINATION_SIZE = 10;
 export const DEFAULT_PAGINATION_OPTIONS = ["10", "25", "50", "100"];

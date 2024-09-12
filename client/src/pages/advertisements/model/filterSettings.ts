@@ -4,10 +4,10 @@ import { Range } from "../../../widgets";
 
 export type SortDirection = "asc" | "desc";
 
-export const filterableFields = ["price", "views", "likes"];
+export const filterableFields = ["price", "views", "likes"] as const;
 
 type sortOption = {
-  by: "price" | "views" | "likes",
+  by: filterableFields[number],
   direction: SortDirection
 };
 
@@ -42,7 +42,7 @@ export const sortConfig: SortAction = {
   },
 } as const;
 
-export const filterFields = ["price", "views", "likes"];
+export const filterFields = ["price", "views", "likes"] as const;
 
 const currentUrl = new URL(window.location.href);
 
@@ -53,9 +53,11 @@ export const initialSettings = (() => {
     page: number,
     paginationSize: number,
     pagesCount: number,
+    /** @todo rewrite duplicates as template literal types */
+    // [key: `${typeof filterableFields[number]}Range`]: Range,
     priceRange: Range,
-    likesRange: Range,
     viewsRange: Range,
+    likesRange: Range,
     sortLabel: keyof typeof sortConfig,
     sort: sortOption,
     filteredAdvertisements: Advertisement[] | null
@@ -80,6 +82,15 @@ export const initialSettings = (() => {
       min: Number(currentUrl.searchParams.get("min-priceRange")) || 0,
       max: Number(currentUrl.searchParams.get("max-priceRange")) || Infinity,
     },
+    viewsRange: {
+      title: "Диапазон просмотров",
+      isLoading: true,
+      error: null,
+      minAvailable: 0,
+      maxAvailable: Infinity,
+      min: Number(currentUrl.searchParams.get("min-viewsRange")) || 0,
+      max: Number(currentUrl.searchParams.get("max-viewsRange")) || Infinity,
+    },
     likesRange: {
       title: "Диапазон лайков",
       isLoading: true,
@@ -91,15 +102,6 @@ export const initialSettings = (() => {
     },
     sortLabel: currentUrl.searchParams.get("sortLabel") as keyof typeof sortConfig || Object.keys(sortConfig)[0],
     sort: Object.values(sortConfig)[0],
-    viewsRange: {
-      title: "Диапазон просмотров",
-      isLoading: true,
-      error: null,
-      minAvailable: 0,
-      maxAvailable: Infinity,
-      min: Number(currentUrl.searchParams.get("min-viewsRange")) || 0,
-      max: Number(currentUrl.searchParams.get("max-viewsRange")) || Infinity,
-    },
     filteredAdvertisements: null,
   };
   prepare.sort = sortConfig[prepare.sortLabel];
@@ -135,7 +137,9 @@ export const reducer = <S extends typeof initialSettings, T extends keyof typeof
   /** workarount for happy-dom */
   try {
     window?.history?.replaceState(null, "", currentUrl);
-  } catch(error) {}
+  } catch(error) {
+    console.error(error);
+  }
 
   return { ...settings };
 };

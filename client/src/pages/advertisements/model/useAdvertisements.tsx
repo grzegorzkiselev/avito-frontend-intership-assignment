@@ -63,5 +63,5 @@ export const useAdvertisements = ({ page, paginationSize, sort, priceRange, like
     });
   }
 
-  return { data, allItems, isLoading, isAllItemsLoading, error: allItemsError };
+  return { data, allItems, isLoading, isAllItemsLoading, error, allItemsError };
 };

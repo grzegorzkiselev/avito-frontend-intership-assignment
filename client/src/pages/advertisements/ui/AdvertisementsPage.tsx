@@ -37,6 +37,7 @@ export const AdvertisementsPage = () => {
         settings.query
         && settings.query.length > 2
         && !isAllItemsLoading
+        && !allItemsError
       ) {
         const searchReg = new RegExp(settings.query, "i");
         settings.filteredAdvertisements = allItems.filter((advertisement) => {

@@ -5,8 +5,7 @@
   gap: 36px;
 }
 
-/* @fixme move into config */
-@media (max-width: 750px) {
+@media (max-width: var(--breakpoint)) {
   grid-template-columns: 4fr 8fr;
   grid-template-rows: 1fr;
 }
