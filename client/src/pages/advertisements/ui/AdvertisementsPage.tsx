@@ -13,6 +13,19 @@ export const AdvertisementsPage = () => {
   const [settings, dispatch] = useReducer(reducer, initialSettings);
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
 
+  const conditionalRenderer = (isLoading, items, error) => {
+      return isLoading
+        ? <CenteredLoader />
+        : error
+          ? <ErrorMessage>{ JSON.stringify(error, null, 2) }</ErrorMessage>
+          : !items || items?.length === 0
+            ? <Center style={{ "flexGrow": "1" }}><Text>Ничего не найдено, попробуйте изменить фильтр</Text></Center>
+            : <>
+              {items.map(advertisementMapper)}
+              <Pagination page={settings.page} pagesCount={settings.pagesCount} dispatch={dispatch} />
+            </>
+  }
+
   filterableFields.forEach((field) => {
     const value = settings[field + "Range"] as Range;
     const { minValueItem, maxValueItem, isMinMaxValuesLoading, minMaxValueError } = getMinMaxValues(ADVERTISEMENTS_PROPS.endpoint, field);
@@ -40,10 +53,15 @@ export const AdvertisementsPage = () => {
         && !allItemsError
       ) {
         const searchReg = new RegExp(settings.query, "i");
-        settings.filteredAdvertisements = allItems.filter((advertisement) => {
+        const filteredAdvertisements = allItems.filter((advertisement) => {
           return advertisement.name.toLowerCase().match(searchReg);
         });
-        pagesCount = Math.ceil(settings.filteredAdvertisements.length / settings.paginationSize);
+        pagesCount = Math.ceil(filteredAdvertisements.length / settings.paginationSize);
+        dispatch({ type: "filteredAdvertisements", value: filteredAdvertisements })
+
+        if (settings.page > pagesCount) {
+          dispatch({ type: "page", value: pagesCount })
+        }
       } else {
         settings.filteredAdvertisements = null;
       }
@@ -51,6 +69,14 @@ export const AdvertisementsPage = () => {
       dispatch({ type: "pagesCount", value: pagesCount });
     }
   }, [data, allItems, isLoading, isAllItemsLoading, settings.query]);
+
+  useEffect(() => {
+    console.log("qch")
+  }, [settings.query])
+
+  const first = (settings.page - 1) * settings.paginationSize;
+  const last = first + settings.paginationSize;
+  console.log("bothered", first, last, settings.filteredAdvertisements)
 
   return <AppSlots
     adaptiveSidebar={
@@ -86,18 +112,7 @@ export const AdvertisementsPage = () => {
     <Stack>
       <Search suggestions={settings.searchHistory} type="query" value={settings.query} dispatch={dispatch} />
       <>
-        {
-          isLoading
-            ? <CenteredLoader />
-            : error
-              ? <ErrorMessage>{ JSON.stringify(error, null, 2) }</ErrorMessage>
-              : (settings.filteredAdvertisements || data.data).length === 0
-                ? <Center style={{ "flexGrow": "1" }}><Text>Ничего не найдено, попробуйте изменить фильтр</Text></Center>
-                : <>
-                  {(settings.filteredAdvertisements || data.data).map(advertisementMapper)}
-                  <Pagination page={settings.page} pagesCount={settings.pagesCount} dispatch={dispatch} />
-                </>
-        }
+        { settings.query ? conditionalRenderer(isLoading, settings?.filteredAdvertisements?.slice(first, last), error) : conditionalRenderer(isLoading, data?.data, error) }
       </>
     </Stack>
 
