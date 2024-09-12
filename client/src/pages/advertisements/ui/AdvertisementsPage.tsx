@@ -1,10 +1,10 @@
-import { Button, Center, Loader, Modal, NativeSelect, Stack, Text } from "@mantine/core";
+import { Button, Center, Loader, Modal, NativeSelect, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useReducer } from "react";
 import { AppSlots } from "../../../app";
 import { Advertisement, AdvertisementCard, CreateUpdateAdvertisementCard } from "../../../entities";
-import { ADVERTISEMENTS_PROPS, CenteredLoader, DEFAULT_PAGINATION_OPTIONS, ErrorMessage, getMinMaxValues } from "../../../shared";
-import { Pagination, PaginationSelector, Range, RangeSelector, Search } from "../../../widgets";
+import { ADVERTISEMENTS_PROPS, DEFAULT_PAGINATION_OPTIONS, ErrorMessage, getMinMaxValues } from "../../../shared";
+import { PaginationSelector, Range, RangeSelector, Search, SuspendedList } from "../../../widgets";
 import { filterableFields, filterFields, initialSettings, reducer, sortConfig, updateMinMaxValues, useAdvertisements } from "../model";
 
 const advertisementMapper = (advertisement: Advertisement) => <AdvertisementCard {...advertisement} key={advertisement.id} />;
@@ -12,19 +12,6 @@ const advertisementMapper = (advertisement: Advertisement) => <AdvertisementCard
 export const AdvertisementsPage = () => {
   const [settings, dispatch] = useReducer(reducer, initialSettings);
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
-
-  const conditionalRenderer = (isLoading, items, error) => {
-      return isLoading
-        ? <CenteredLoader />
-        : error
-          ? <ErrorMessage>{ JSON.stringify(error, null, 2) }</ErrorMessage>
-          : !items || items?.length === 0
-            ? <Center style={{ "flexGrow": "1" }}><Text>Ничего не найдено, попробуйте изменить фильтр</Text></Center>
-            : <>
-              {items.map(advertisementMapper)}
-              <Pagination page={settings.page} pagesCount={settings.pagesCount} dispatch={dispatch} />
-            </>
-  }
 
   filterableFields.forEach((field) => {
     const value = settings[field + "Range"] as Range;
@@ -111,9 +98,18 @@ export const AdvertisementsPage = () => {
   >
     <Stack>
       <Search suggestions={settings.searchHistory} type="query" value={settings.query} dispatch={dispatch} />
-      <>
-        { settings.query ? conditionalRenderer(isLoading, settings?.filteredAdvertisements?.slice(first, last), error) : conditionalRenderer(isLoading, data?.data, error) }
-      </>
+      <SuspendedList
+        settings={settings}
+        dispatch={dispatch}
+        mapper={advertisementMapper}
+        isLoading={isLoading}
+        error={error}
+        items={
+          settings.query
+            ? settings?.filteredAdvertisements?.slice(first, last)
+            : data?.data
+        }
+      />
     </Stack>
 
   </AppSlots>;

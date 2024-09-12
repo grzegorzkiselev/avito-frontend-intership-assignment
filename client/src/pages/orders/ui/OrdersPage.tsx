@@ -1,34 +1,21 @@
-import { Center, NativeSelect, Stack, Text } from "@mantine/core";
+
+import { NativeSelect, Stack } from "@mantine/core";
 import { useReducer, useState } from "react";
 import { AppSlots } from "../../../app";
 import { OrderCard } from "../../../entities";
-import { CenteredLoader, DEFAULT_PAGINATION_OPTIONS, ErrorMessage } from "../../../shared";
-import { Pagination, PaginationSelector } from "../../../widgets";
+import { DEFAULT_PAGINATION_OPTIONS } from "../../../shared";
+import { PaginationSelector, SuspendedList } from "../../../widgets";
 import { initialSettings, reducer, sortConfig, statusSelectConfig, useOrders } from "../model";
 
 const mapper = (order) => {
   return <OrderCard {...order} key={"order-" + order.id}/>;
-}
+};
 
 let timerId = null;
 export const OrdersPage = () => {
   const [settings, dispatch] = useReducer(reducer, initialSettings);
   const { data, isLoading, error, allItems, isAllItemsLoading, allItemsError } = useOrders(settings);
   const [isCustomLoading, setIsCustomLoading] = useState(true);
-
-  const conditionalListRenderer = (isLoading, items, error) => {
-   return isLoading
-    ? <CenteredLoader />
-    : error
-      ? <ErrorMessage>{ JSON.stringify(error, null, 2) }</ErrorMessage>
-      : items.length === 0
-        ? <Center style={{ "flexGrow": "1" }}><Text>Ничего не найдено, попробуйте изменить фильтр</Text></Center>
-        : <>{
-          items.map(mapper)
-        }
-        <Pagination page={settings.page} pagesCount={settings.pagesCount} dispatch={dispatch} />
-        </>
-  }
 
   const findIncluded = () => {
     const filteredOrders = [];
@@ -43,9 +30,9 @@ export const OrdersPage = () => {
     const pagesCount = Math.ceil(filteredOrders.length / settings.paginationSize);
     dispatch({ type: "pagesCount", value: pagesCount });
     dispatch({ type: "filteredOrders", value: filteredOrders });
-    setIsCustomLoading(() => false)
+    setIsCustomLoading(() => false);
     clearTimeout(timerId);
-  }
+  };
 
   if (settings.forItem) {
     if (
@@ -78,13 +65,26 @@ export const OrdersPage = () => {
     }
   >
     <Stack>
-      <>
-        {
-        settings.forItem
-        ? conditionalListRenderer(isCustomLoading, settings.filteredOrders?.slice(first, last), allItemsError)
-        : conditionalListRenderer(isLoading, data?.data, error)
-      }
-      </>
+      <SuspendedList
+        settings={settings}
+        dispatch={dispatch}
+        mapper={mapper}
+        isLoading={
+          settings.forItem
+            ? isCustomLoading
+            : isLoading
+        }
+        error={
+          settings.forItem
+            ? allItemsError
+            : error
+        }
+        items={
+          settings.forItem
+            ? settings.filteredOrders?.slice(first, last)
+            : data?.data
+        }
+      />
     </Stack>
   </AppSlots>;
 };
