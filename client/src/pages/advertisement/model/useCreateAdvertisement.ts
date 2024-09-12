@@ -13,7 +13,7 @@ export const useCreateAdvertisement = () => {
 
       notifications.show({
         title: "Объявление успешно обновлено",
-        message: "Ты ок и я ок",
+        message: "",
       });
     },
     onError: (error) => {
