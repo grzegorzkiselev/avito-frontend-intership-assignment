@@ -1,4 +1,3 @@
-
 import { NativeSelect, Stack } from "@mantine/core";
 import { useReducer, useState } from "react";
 import { AppSlots } from "../../../app";
@@ -52,6 +51,7 @@ export const OrdersPage = () => {
     }
   }
 
+  /** @duplicate ¹ */
   const first = (settings.page - 1) * settings.paginationSize;
   const last = first + settings.paginationSize;
 
