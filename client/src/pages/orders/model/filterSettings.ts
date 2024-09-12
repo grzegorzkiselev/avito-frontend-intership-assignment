@@ -35,7 +35,7 @@ export const initialSettings = (() => {
   } = {
     page: Number(currentUrl.searchParams.get("page")) || 1,
     paginationSize: Number(currentUrl.searchParams.get("paginationSize")) || DEFAULT_PAGINATION_SIZE,
-    pagesCount: 0,
+    pagesCount: 1,
     forItem: Number(currentUrl.searchParams.get("forItem")) || null,
     sortLabel: currentUrl.searchParams.get("sortLabel") as keyof typeof sortConfig || Object.keys(sortConfig)[0],
     sort: Object.values(sortConfig)[0],

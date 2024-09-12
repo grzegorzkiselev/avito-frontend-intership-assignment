@@ -70,7 +70,7 @@ export const initialSettings = (() => {
     })(),
     page: Number(currentUrl.searchParams.get("page")) || 1,
     paginationSize: Number(currentUrl.searchParams.get("paginationSize")) || DEFAULT_PAGINATION_SIZE,
-    pagesCount: 0,
+    pagesCount: 1,
     priceRange: {
       title: "Диапазон цен",
       isLoading: true,
