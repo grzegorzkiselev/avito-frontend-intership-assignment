@@ -3,7 +3,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { useEffect, useReducer } from "react";
 import { AppSlots } from "../../../app";
 import { Advertisement, AdvertisementCard, CreateUpdateAdvertisementCard } from "../../../entities";
-import { ADVERTISEMENTS_PROPS, CenteredLoader, ErrorMessage, getMinMaxValues } from "../../../shared";
+import { ADVERTISEMENTS_PROPS, CenteredLoader, DEFAULT_PAGINATION_OPTIONS, ErrorMessage, getMinMaxValues } from "../../../shared";
 import { Pagination, PaginationSelector, Range, RangeSelector, Search } from "../../../widgets";
 import { filterableFields, filterFields, initialSettings, reducer, sortConfig, updateMinMaxValues, useAdvertisements } from "../model";
 
@@ -50,7 +50,7 @@ export const AdvertisementsPage = () => {
   return <AppSlots
     adaptiveSidebar={
       <Stack>
-        <PaginationSelector value={settings.paginationSize} dispatch={dispatch}/>
+        <PaginationSelector paginationOptions={DEFAULT_PAGINATION_OPTIONS} value={settings.paginationSize} dispatch={dispatch}/>
         {
           filterFields.map((field) => {
             const rangeName = field + "Range";

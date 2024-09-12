@@ -1,6 +1,6 @@
 import { SegmentedControl, Text } from "@mantine/core";
 
-export const PaginationSelector = ({ value, dispatch }) => {
+export const PaginationSelector = ({ value, dispatch, paginationOptions }) => {
   const handlePaginationSizeChange = (event) => {
     dispatch({ type: "paginationSize", value: event });
   };
@@ -13,7 +13,7 @@ export const PaginationSelector = ({ value, dispatch }) => {
       style={{ "width": "auto" }}
       value={value.toString()}
       onChange={handlePaginationSizeChange}
-      data={["10", "25", "50", "100"]}
+      data={paginationOptions}
     />
   </div>;
 };

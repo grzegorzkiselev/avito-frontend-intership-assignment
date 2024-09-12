@@ -1,6 +1,7 @@
 export const API_BASE_URL = import.meta.env.VITE_API_ORIGIN;
 export const BASE_ROOT = "/";
 export const DEFAULT_PAGINATION_SIZE = 10;
+export const DEFAULT_PAGINATION_OPTIONS = ["10", "25", "50", "100"];
 export const ADVERTISEMENTS_PROPS = {
   title: "Объявления",
   slug: "advertisements",
