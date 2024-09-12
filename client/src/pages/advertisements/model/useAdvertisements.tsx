@@ -7,12 +7,14 @@ export const useAdvertisements = ({ page, paginationSize, sort, priceRange, like
   const queryClient = useQueryClient();
   const params = new URLSearchParams();
 
-  priceRange.min && params.set("price_gte", "" + priceRange.min);
-  params.set("price_lte", "" + priceRange.max);
-  likesRange.min && params.set("likes_gte", "" + likesRange.min);
-  params.set("likes_lte", "" + likesRange.max);
-  viewsRange.min && params.set("views_gte", "" + viewsRange.min);
-  params.set("views_lte", "" + viewsRange.max);
+  priceRange?.min && params.set("price_gte", "" + priceRange.min);
+  Number.isFinite(priceRange?.max) && params.set("price_lte", "" + priceRange.max);
+
+  likesRange?.min && params.set("likes_gte", "" + likesRange.min);
+  Number.isFinite(likesRange?.max) && params.set("likes_lte", "" + likesRange.max);
+
+  viewsRange?.min && params.set("views_gte", "" + viewsRange.min);
+  Number.isFinite(viewsRange?.max) && params.set("views_lte", "" + viewsRange.min);
 
   paginationSize = paginationSize ?? DEFAULT_PAGINATION_SIZE;
   params.set("_page", "" + page);
