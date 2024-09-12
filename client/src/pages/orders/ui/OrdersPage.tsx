@@ -1,18 +1,36 @@
-import { Alert, Center, NativeSelect, Stack, Text } from "@mantine/core";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { Center, NativeSelect, Stack, Text } from "@mantine/core";
+import { useReducer, useState } from "react";
 import { AppSlots } from "../../../app";
 import { OrderCard } from "../../../entities";
-import { CenteredLoader, DEFAULT_PAGINATION_OPTIONS } from "../../../shared";
+import { CenteredLoader, DEFAULT_PAGINATION_OPTIONS, ErrorMessage } from "../../../shared";
 import { Pagination, PaginationSelector } from "../../../widgets";
 import { initialSettings, reducer, sortConfig, statusSelectConfig, useOrders } from "../model";
 
+const mapper = (order) => {
+  return <OrderCard {...order} key={"order-" + order.id}/>;
+}
+
+let timerId = null;
 export const OrdersPage = () => {
   const [settings, dispatch] = useReducer(reducer, initialSettings);
   const { data, isLoading, error, allItems, isAllItemsLoading, allItemsError } = useOrders(settings);
   const [isCustomLoading, setIsCustomLoading] = useState(true);
 
-  const timerId = useRef(null);
-  const findIncludesItem = () => {
+  const conditionalListRenderer = (isLoading, items, error) => {
+   return isLoading
+    ? <CenteredLoader />
+    : error
+      ? <ErrorMessage>{ JSON.stringify(error, null, 2) }</ErrorMessage>
+      : items.length === 0
+        ? <Center style={{ "flexGrow": "1" }}><Text>Ничего не найдено, попробуйте изменить фильтр</Text></Center>
+        : <>{
+          items.map(mapper)
+        }
+        <Pagination page={settings.page} pagesCount={settings.pagesCount} dispatch={dispatch} />
+        </>
+  }
+
+  const findIncluded = () => {
     const filteredOrders = [];
     for (const order of allItems) {
       for (const item of order.items) {
@@ -22,34 +40,33 @@ export const OrdersPage = () => {
         }
       }
     }
-    settings.filteredOrders = filteredOrders;
-    const pagesCount = Math.ceil(settings.filteredOrders.length / settings.paginationSize);
+    const pagesCount = Math.ceil(filteredOrders.length / settings.paginationSize);
     dispatch({ type: "pagesCount", value: pagesCount });
-    setIsCustomLoading(() => false);
+    dispatch({ type: "filteredOrders", value: filteredOrders });
+    setIsCustomLoading(() => false)
+    clearTimeout(timerId);
   }
 
-  /** @todo reuse this logic */
-  useEffect(() => {
-    if (!settings.forItem) {
-      setIsCustomLoading(() => false);
-      settings.filteredOrders = null;
-
-      if (!isLoading && !error && data) {
-        dispatch({ type: "pagesCount", value: data.pages });
+  if (settings.forItem) {
+    if (
+      !isAllItemsLoading
+      && !allItemsError
+      && allItems
+      && !settings.filteredOrders
+    ) {
+      if (!timerId) {
+        timerId = setTimeout(findIncluded);
       }
     }
-
-    if (
-      settings.forItem
-      && !isAllItemsLoading
-      && !allItemsError
-    ) {
-      setIsCustomLoading(() => true);
-      timerId.current = setTimeout(findIncludesItem);
+  } else {
+    settings.filteredOrders = null;
+    if (!isLoading && !error && data) {
+      settings.pagesCount = data.pages;
     }
+  }
 
-    return () => { clearTimeout(timerId.current) }
-  }, [data, isLoading, error, allItems, isAllItemsLoading, allItemsError]);
+  const first = (settings.page - 1) * settings.paginationSize;
+  const last = first + settings.paginationSize;
 
   return <AppSlots
     adaptiveSidebar={
@@ -63,21 +80,10 @@ export const OrdersPage = () => {
     <Stack>
       <>
         {
-          (console.log(isCustomLoading, isLoading), isCustomLoading || isLoading)
-            ? <CenteredLoader />
-            : error
-              ? <Alert variant="light" color="red" radius="md">
-                { JSON.stringify(error, null, 2) }
-              </Alert>
-              : (settings.filteredOrders || data.data).length === 0
-                ? <Center style={{ "flexGrow": "1" }}><Text>Ничего не найдено, попробуйте изменить фильтр</Text></Center>
-                : <>{
-                  (settings.filteredOrders || data.data).map((order) => {
-                    return <OrderCard {...order} key={"order-" + order.id}/>;
-                  })}
-                <Pagination page={settings.page} pagesCount={settings.pagesCount} dispatch={dispatch} />
-                </>
-        }
+        settings.forItem
+        ? conditionalListRenderer(isCustomLoading, settings.filteredOrders?.slice(first, last), allItemsError)
+        : conditionalListRenderer(isLoading, data?.data, error)
+      }
       </>
     </Stack>
   </AppSlots>;
