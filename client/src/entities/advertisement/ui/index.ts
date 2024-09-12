@@ -1,3 +1,3 @@
 export * from "./AdvertisementCard";
-export * from "./CreateUdateAdvertisementCard";
+export * from "./CreateUpdateAdvertisementCard";
 
