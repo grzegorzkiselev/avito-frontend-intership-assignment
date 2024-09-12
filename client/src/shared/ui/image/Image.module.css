@@ -1,0 +1,23 @@
+.image {
+  position: relative;
+  --fallback-color: gray;
+  font-size: 3rem;
+  overflow: hidden;
+}
+
+.image::before,
+.image::after {
+  content: "¯\\_(ツ)_/¯";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  color: inherit;
+  background-color: var(--fallback-color);
+  text-wrap: nowrap;
+}
+
+.image::after {
+  color: #999999;
+  text-decoration: none;
+}

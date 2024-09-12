@@ -1,0 +1,40 @@
+.layout {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 36px;
+}
+
+.container {
+  display: grid;
+  min-height: inherit;
+}
+
+.slotsWrapper {
+  /* display: grid; */
+}
+
+.main {
+  display: grid; 
+}
+
+.shrink {
+  flex-grow: 1;
+}
+
+.sidebar {
+  position: static;
+  top: 0;
+  z-index: 10;
+  overflow: visible;
+}
+
+.manitineGroupInnerOverride>div {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: var(--breakpoint)) {
+  .sidebar {
+    position: static;
+  }
+}

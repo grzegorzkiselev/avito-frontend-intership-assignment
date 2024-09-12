@@ -1,0 +1,17 @@
+.layout {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  /* @fixme move into config */
+  gap: 36px;
+}
+
+/* @fixme move into config */
+@media (max-width: 750px) {
+  grid-template-columns: 4fr 8fr;
+  grid-template-rows: 1fr;
+}
+
+.manitineGroupInnerOverride>div {
+  flex-wrap: nowrap;
+  flex-direction: column;
+}
