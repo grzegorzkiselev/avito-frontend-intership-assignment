@@ -1,1 +1,1 @@
-export * from "./PageParams"
+export * from "./PageParams";
