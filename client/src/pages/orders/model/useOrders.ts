@@ -9,8 +9,6 @@ export const useOrders = ({ page, paginationSize, sort, status }) => {
 
   const paramsWithoutPagination = params.toString();
 
-  console.log(paramsWithoutPagination)
-
   const {
     data: allItems,
     isLoading: isAllItemsLoading,

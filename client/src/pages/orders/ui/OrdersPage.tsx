@@ -1,8 +1,8 @@
 import { NativeSelect, Stack } from "@mantine/core";
-import { useReducer, useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { AppSlots } from "../../../app";
 import { OrderCard } from "../../../entities";
-import { DEFAULT_PAGINATION_OPTIONS, CenteredLoader } from "../../../shared";
+import { DEFAULT_PAGINATION_OPTIONS } from "../../../shared";
 import { PaginationSelector, SuspendedList } from "../../../widgets";
 import { initialSettings, reducer, sortConfig, statusSelectConfig, useOrders } from "../model";
 
@@ -34,12 +34,12 @@ export const OrdersPage = () => {
   };
 
   useEffect(() => {
-    setIsCustomLoading(() => true)
+    setIsCustomLoading(() => true);
     if (settings.forItem) {
       timerId = setTimeout(findIncludes);
     }
-    return () => clearTimeout(timerId)
-  }, [allItems, isAllItemsLoading, allItemsError])
+    return () => clearTimeout(timerId);
+  }, [allItems, isAllItemsLoading, allItemsError]);
 
   if (!settings.forItem) {
     settings.filteredOrders = null;
