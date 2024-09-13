@@ -43,7 +43,7 @@ export const AdvertisementsPage = () => {
         const filteredAdvertisements = allItems.filter((advertisement) => {
           return advertisement.name.toLowerCase().match(searchReg);
         });
-        pagesCount = Math.ceil(filteredAdvertisements.length / settings.paginationSize);
+        pagesCount = Math.ceil(filteredAdvertisements.length / settings.paginationSize) || 1;
         dispatch({ type: "filteredAdvertisements", value: filteredAdvertisements });
 
         if (settings.page > pagesCount) {

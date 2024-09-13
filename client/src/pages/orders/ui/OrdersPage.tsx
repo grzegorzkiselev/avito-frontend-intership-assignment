@@ -26,7 +26,7 @@ export const OrdersPage = () => {
         }
       }
     }
-    const pagesCount = Math.ceil(filteredOrders.length / settings.paginationSize);
+    const pagesCount = Math.ceil(filteredOrders.length / settings.paginationSize) || 1;
     dispatch({ type: "pagesCount", value: pagesCount });
     dispatch({ type: "filteredOrders", value: filteredOrders });
     setIsCustomLoading(() => false);
