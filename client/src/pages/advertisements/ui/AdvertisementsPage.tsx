@@ -57,6 +57,7 @@ export const AdvertisementsPage = () => {
     }
   }, [data, allItems, isLoading, isAllItemsLoading, settings.query]);
 
+  /** @duplicate ¹ */
   const first = (settings.page - 1) * settings.paginationSize;
   const last = first + settings.paginationSize;
 

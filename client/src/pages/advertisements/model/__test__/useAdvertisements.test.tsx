@@ -31,7 +31,6 @@ describe("Advertisements api interactoins", () => {
 
     const awaitMe = new Promise((resolve) => {
       const iId = setInterval(() => {
-        console.log(result);
         if (result.current.data) {
           resolve(result.current.data);
           clearInterval(iId);
