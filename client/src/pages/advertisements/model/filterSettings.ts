@@ -42,7 +42,6 @@ export const sortConfig: SortAction = {
   },
 } as const;
 
-export const filterFields = ["price", "views", "likes"] as const;
 
 const currentUrl = new URL(window.location.href);
 

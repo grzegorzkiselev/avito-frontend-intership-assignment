@@ -5,7 +5,7 @@ import { AppSlots } from "../../../app";
 import { Advertisement, AdvertisementCard, CreateUpdateAdvertisementCard } from "../../../entities";
 import { ADVERTISEMENTS_PROPS, DEFAULT_PAGINATION_OPTIONS, ErrorMessage, getMinMaxValues } from "../../../shared";
 import { PaginationSelector, Range, RangeSelector, Search, SuspendedList } from "../../../widgets";
-import { filterableFields, filterFields, initialSettings, reducer, sortConfig, updateMinMaxValues, useAdvertisements } from "../model";
+import { filterableFields, initialSettings, reducer, sortConfig, updateMinMaxValues, useAdvertisements } from "../model";
 
 const advertisementMapper = (advertisement: Advertisement) => <AdvertisementCard {...advertisement} key={advertisement.id} />;
 
@@ -66,7 +66,7 @@ export const AdvertisementsPage = () => {
       <Stack>
         <PaginationSelector paginationOptions={DEFAULT_PAGINATION_OPTIONS} value={settings.paginationSize} dispatch={dispatch}/>
         {
-          filterFields.map((field) => {
+          filterableFields.map((field) => {
             const rangeName = field + "Range";
             const rangeLink = settings[field + "Range"];
 
