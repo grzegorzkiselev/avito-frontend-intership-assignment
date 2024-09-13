@@ -6,7 +6,9 @@ export const Search = (
   { value, type, dispatch, suggestions }: { value: string, type: string, suggestions?: string[], dispatch: Dispatch<unknown> } = {},
 ) => {
   const applyChanges = (event) => {
-    dispatch({ type, value: event.currentTarget.value });
+    if (event.currentTarget.value.length > 2) {
+      dispatch({ type, value: event.currentTarget.value });
+    }
   };
   const ref = useEventListener("change", applyChanges);
 

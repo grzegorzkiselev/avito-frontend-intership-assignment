@@ -117,7 +117,7 @@ export const reducer = <S extends typeof initialSettings, T extends keyof typeof
     settings.page = 1;
   } else {
     settings[action.type] = action.value;
-    if (action.type === "query" && typeof action.value === "string") {
+    if (action.type === "query" && typeof action.value === "string" && action.value.length > 2) {
       !settings.searchHistory.includes(action.value) && settings.searchHistory.unshift(action.value);
       settings.searchHistory.length = Math.min(5, settings.searchHistory.length);
       localStorage.setItem("searchHistory", JSON.stringify(settings.searchHistory));
@@ -130,6 +130,7 @@ export const reducer = <S extends typeof initialSettings, T extends keyof typeof
 
   if (action.type === "page"
     || action.type === "paginationSize"
+    || action.type === "query"
   ) {
     currentUrl.searchParams.set(action.type, "" + settings[action.type]);
   }
