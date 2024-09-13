@@ -1,21 +1,11 @@
-import { Advertisement } from "../../../entities";
 import { DEFAULT_PAGINATION_SIZE } from "../../../shared";
-import { Range } from "../../../widgets";
+import { Range, SortConfig } from "../../../widgets";
 
-export type SortDirection = "asc" | "desc";
-
+/** not a double with ¹, just a considence, no need to deduplicate */
 export const filterableFields = ["price", "views", "likes"] as const;
 
-type sortOption = {
-  by: filterableFields[number],
-  direction: SortDirection
-};
-
-export type SortAction = {
-  [key: string]: sortOption
-};
-
-export const sortConfig: SortAction = {
+/** ¹ */
+export const sortConfig: SortConfig = {
   "Сначала дешевле": {
     by : "price",
     direction : "asc",
@@ -42,24 +32,58 @@ export const sortConfig: SortAction = {
   },
 } as const;
 
-
-const currentUrl = new URL(window.location.href);
-
-export const initialSettings = (() => {
+export const initialSettings = ((currentUrl) => {
   const prepare: {
-    query: string,
-    searchHistory: string[],
+    /**
+     * State specific
+     */
+    currentUrl: URL
+    /**
+     * Pagination specific
+     */
     page: number,
     paginationSize: number,
     pagesCount: number,
-    /** @todo rewrite duplicates as template literal types */
-    // [key: `${typeof filterableFields[number]}Range`]: Range,
+
+    /**
+     * Filtering by range specific
+     * for different pages it should be different
+     * so we need to figure out how to make it
+     * configurable
+     * @todo combine into single array
+     */
     priceRange: Range,
     viewsRange: Range,
     likesRange: Range,
+
+    /**
+     * Sorting specific
+     */
     sortLabel: keyof typeof sortConfig,
-    sort: sortOption,
+    sort: SortOption,
+
+    /**
+     * Client-side features
+     *
+     * @todo give it a generic name to abstract the logic
+     *
+     * Items to render.
+     * Should I paginate it right here instead of
+     * passing slice of this array in template?
+     *
+     * Client features based on some kind of filtering
+     * callback that dispatches new pagesCount and
+     * narrowed collection of already server-side
+     * ranged and sorted items
+     */
     filteredAdvertisements: Advertisement[] | null
+
+    /**
+     * Here custom filtering is used for searching
+     * in items names
+     */
+    query: string,
+    searchHistory: string[],
   } = {
     query: currentUrl.searchParams.get("query") || "",
     searchHistory: (() => {
@@ -69,6 +93,7 @@ export const initialSettings = (() => {
         return [];
       }
     })(),
+    currentUrl: currentUrl,
     page: Number(currentUrl.searchParams.get("page")) || 1,
     paginationSize: Number(currentUrl.searchParams.get("paginationSize")) || DEFAULT_PAGINATION_SIZE,
     pagesCount: 1,
@@ -99,6 +124,8 @@ export const initialSettings = (() => {
       min: Number(currentUrl.searchParams.get("min-likesRange")) || 0,
       max: Number(currentUrl.searchParams.get("max-likesRange")) || Infinity,
     },
+    /** @todo rewire */
+    sortConfig: sortConfig,
     sortLabel: currentUrl.searchParams.get("sortLabel") as keyof typeof sortConfig || Object.keys(sortConfig)[0],
     sort: Object.values(sortConfig)[0],
     filteredAdvertisements: null,
@@ -106,44 +133,11 @@ export const initialSettings = (() => {
   prepare.sort = sortConfig[prepare.sortLabel];
 
   return prepare;
-})();
+})(new URL(window.location.href));
 
-export const reducer = <S extends typeof initialSettings, T extends keyof typeof initialSettings>(settings: S, action: { type: T, value: S[T] }) => {
-  if (action.type === "sortLabel") {
-    settings.sortLabel = (Array.from(action.value.target.children).find((element) => element.selected)).value;
-    currentUrl.searchParams.set("sortLabel", settings.sortLabel);
-    settings.sort = sortConfig[settings.sortLabel];
-    settings.page = 1;
-  } else {
-    settings[action.type] = action.value;
-    if (action.type === "query" && typeof action.value === "string" && action.value.length > 2) {
-      !settings.searchHistory.includes(action.value) && settings.searchHistory.unshift(action.value);
-      settings.searchHistory.length = Math.min(5, settings.searchHistory.length);
-      localStorage.setItem("searchHistory", JSON.stringify(settings.searchHistory));
-    }
-    if (action.type.endsWith("Range")) {
-      const rangeLink = settings[action.type] as Range;
-      currentUrl.searchParams.set("max-" + action.type, "" + rangeLink.max);
-    }
-  }
-
-  if (action.type === "page"
-    || action.type === "paginationSize"
-    || action.type === "query"
-  ) {
-    currentUrl.searchParams.set(action.type, "" + settings[action.type]);
-  }
-
-  /** workarount for happy-dom */
-  try {
-    window?.history?.replaceState(null, "", currentUrl);
-  } catch(error) {
-    console.error(error);
-  }
-
-  return { ...settings };
-};
-
+/**
+ * Is used only for getting ranges for *Range filters
+ */
 export const updateMinMaxValues = <F extends string>(isLoading: boolean, error: unknown, { maxValueItem, field, rangeLink }: { maxValueItem: { data: { [key in F]: number }[] }, field: F, rangeLink: Range }) => {
   if (!isLoading && !error) {
     rangeLink.maxAvailable = maxValueItem?.data?.[0]?.[field];
@@ -152,3 +146,5 @@ export const updateMinMaxValues = <F extends string>(isLoading: boolean, error: 
     }
   }
 };
+
+export { reducer } from "../../../widgets";

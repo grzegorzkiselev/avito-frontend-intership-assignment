@@ -1,15 +1,12 @@
 import { Order, OrderStatus } from "../../../entities";
 import { DEFAULT_PAGINATION_SIZE } from "../../../shared";
+import { SortConfig, SortOption } from "../../../widgets";
 
 const defaultStatusLabel = "All";
+/** rename to filterableFields */
 export const statusSelectConfig = [defaultStatusLabel, ...Object.keys(OrderStatus)] as const;
 
-type SortOption = {
-  by: string,
-  direction: "asc" | "desc"
-};
-
-export const sortConfig: Record<string, SortOption> = {
+export const sortConfig: SortConfig = {
   "Сначала c меньшей суммой": {
     by : "total",
     direction : "asc",
@@ -18,68 +15,54 @@ export const sortConfig: Record<string, SortOption> = {
     by : "total",
     direction : "desc",
   },
-};
+} as const;
 
-const currentUrl = new URL(window.location.href);
-export const initialSettings = (() => {
-  const pre: {
+export const initialSettings = ((currentUrl) => {
+  const prepare: {
+    /**
+     * Pagination specific
+     */
     page: number,
     paginationSize: number,
     pagesCount: number,
-    forItem: number | null,
+
+    /**
+     * Sorting specific
+     */
     sortLabel: keyof typeof sortConfig,
     sort: SortOption,
+
+    /** @todo give it a generic name to abstract the logic */
+    filteredOrders: Order[] | null,
+
+    /** @todo need to abstract logic,
+     * need an abstraction for discrete filtering
+     * client-side
+     * should I pass custom filtering callback here?
+     */
+    forItem: number | null,
+
     statusLabel: typeof statusSelectConfig[number],
     status: number,
-    filteredOrders: Order[] | null,
   } = {
+    currentUrl: currentUrl,
     page: Number(currentUrl.searchParams.get("page")) || 1,
     paginationSize: Number(currentUrl.searchParams.get("paginationSize")) || DEFAULT_PAGINATION_SIZE,
     pagesCount: 1,
     forItem: Number(currentUrl.searchParams.get("forItem")) || null,
     sortLabel: currentUrl.searchParams.get("sortLabel") as keyof typeof sortConfig || Object.keys(sortConfig)[0],
     sort: Object.values(sortConfig)[0],
+    sortConfig: sortConfig,
     statusLabel: currentUrl.searchParams.get("statusLabel") as typeof statusSelectConfig[number] || statusSelectConfig[0],
     status: 0,
     filteredOrders: null,
+    /** Too specific, not good, but for now it’s ok */
+    statusSelectConfig: statusSelectConfig,
   };
-  pre.sort = sortConfig[pre.sortLabel];
-  pre.status = statusSelectConfig.indexOf(pre.statusLabel) - 1;
+  prepare.sort = sortConfig[prepare.sortLabel];
+  prepare.status = statusSelectConfig.indexOf(prepare.statusLabel) - 1;
 
-  return pre;
-})();
+  return prepare;
+})(new URL(window.location.href));
 
-export const reducer = (settings, action) => {
-  settings[action.type] = action.value;
-  if (
-    action.type === "sortLabel"
-  ) {
-    settings[action.type] = (Array.from(action.value.target.children).find((element) => element.selected)).value;
-    currentUrl.searchParams.set(action.type, settings[action.type]);
-
-    settings.sort = sortConfig[settings.sortLabel];
-
-    settings.page = 1;
-  }
-
-  if (
-    action.type === "statusLabel"
-  ) {
-    const selectedOptionIndex = Array.from(action.value.target.children).findIndex((element) => element.selected);
-    settings[action.type] = statusSelectConfig[selectedOptionIndex];
-    settings.status = selectedOptionIndex  - 1;
-    currentUrl.searchParams.set(action.type, settings[action.type]);
-    settings.sort = sortConfig[settings.sortLabel];
-    settings.page = 1;
-  }
-
-  if (action.type === "page"
-    || action.type === "paginationSize"
-  ) {
-    currentUrl.searchParams.set(action.type, "" + settings[action.type]);
-  }
-
-  window.history.pushState(null, "", currentUrl);
-
-  return { ...settings };
-};
+export { reducer } from "../../../widgets";

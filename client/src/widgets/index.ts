@@ -6,3 +6,4 @@ export * from "./pagination-size-selector";
 export * from "./search";
 export * from "./range-selector";
 export * from "./suspended-list";
+export * from "./page-params"
