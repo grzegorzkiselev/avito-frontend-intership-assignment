@@ -1,8 +1,8 @@
 import { NativeSelect, Stack } from "@mantine/core";
-import { useReducer, useState } from "react";
+import { useReducer, useEffect, useState } from "react";
 import { AppSlots } from "../../../app";
 import { OrderCard } from "../../../entities";
-import { DEFAULT_PAGINATION_OPTIONS } from "../../../shared";
+import { DEFAULT_PAGINATION_OPTIONS, CenteredLoader } from "../../../shared";
 import { PaginationSelector, SuspendedList } from "../../../widgets";
 import { initialSettings, reducer, sortConfig, statusSelectConfig, useOrders } from "../model";
 
@@ -16,7 +16,7 @@ export const OrdersPage = () => {
   const { data, isLoading, error, allItems, isAllItemsLoading, allItemsError } = useOrders(settings);
   const [isCustomLoading, setIsCustomLoading] = useState(true);
 
-  const findIncluded = () => {
+  const findIncludes = () => {
     const filteredOrders = [];
     for (const order of allItems) {
       for (const item of order.items) {
@@ -33,25 +33,21 @@ export const OrdersPage = () => {
     clearTimeout(timerId);
   };
 
-  if (settings.forItem) {
-    if (
-      !isAllItemsLoading
-      && !allItemsError
-      && allItems
-      && !settings.filteredOrders
-    ) {
-      if (!timerId) {
-        timerId = setTimeout(findIncluded);
-      }
+  useEffect(() => {
+    setIsCustomLoading(() => true)
+    if (settings.forItem) {
+      timerId = setTimeout(findIncludes);
     }
-  } else {
+    return () => clearTimeout(timerId)
+  }, [allItems, isAllItemsLoading, allItemsError])
+
+  if (!settings.forItem) {
     settings.filteredOrders = null;
     if (!isLoading && !error && data) {
       settings.pagesCount = data.pages;
     }
   }
 
-  /** @duplicate ¹ */
   const first = (settings.page - 1) * settings.paginationSize;
   const last = first + settings.paginationSize;
 
@@ -65,6 +61,7 @@ export const OrdersPage = () => {
     }
   >
     <Stack>
+
       <SuspendedList
         settings={settings}
         dispatch={dispatch}
@@ -85,6 +82,7 @@ export const OrdersPage = () => {
             : data?.data
         }
       />
+
     </Stack>
   </AppSlots>;
 };

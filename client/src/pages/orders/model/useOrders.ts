@@ -4,13 +4,25 @@ import { getOrders } from "../api";
 
 export const useOrders = ({ page, paginationSize, sort, status }) => {
   const params = new URLSearchParams();
+  sort && sort.by && params.set("_sort", (sort.direction === "desc" ? "-" : "") + sort.by);
+  status >= 0 && params.set("status", "" + status);
+
+  const paramsWithoutPagination = params.toString();
+
+  console.log(paramsWithoutPagination)
+
+  const {
+    data: allItems,
+    isLoading: isAllItemsLoading,
+    error: allItemsError,
+  } = useQuery({
+    queryKey: [ORDERS_PROPS.endpoint, paramsWithoutPagination],
+    queryFn: () => getOrders("?" + paramsWithoutPagination),
+  });
+
   paginationSize = paginationSize ?? DEFAULT_PAGINATION_SIZE;
   params.set("_page", "" + page);
   params.set("_per_page", "" + paginationSize);
-
-  sort && sort.by && params.set("_sort", (sort.direction === "desc" ? "-" : "") + sort.by);
-
-  status >= 0 && params.set("status", "" + status);
 
   const {
     data,
@@ -19,15 +31,6 @@ export const useOrders = ({ page, paginationSize, sort, status }) => {
   } = useQuery({
     queryKey: [ORDERS_PROPS.endpoint, params.toString()],
     queryFn: () => getOrders("?" + params.toString()),
-  });
-
-  const {
-    data: allItems,
-    isLoading: isAllItemsLoading,
-    error: allItemsError,
-  } = useQuery({
-    queryKey: [ORDERS_PROPS.endpoint],
-    queryFn: () => getOrders(""),
   });
 
   const baseParamsEntries = params.entries();

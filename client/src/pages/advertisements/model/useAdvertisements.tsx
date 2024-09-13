@@ -14,12 +14,24 @@ export const useAdvertisements = ({ page, paginationSize, sort, priceRange, like
   Number.isFinite(likesRange?.max) && params.set("likes_lte", "" + likesRange.max);
 
   viewsRange?.min && params.set("views_gte", "" + viewsRange.min);
-  Number.isFinite(viewsRange?.max) && params.set("views_lte", "" + viewsRange.min);
+  Number.isFinite(viewsRange?.max) && params.set("views_lte", "" + viewsRange.max);
+
+  sort && sort.by && params.set("_sort", (sort.direction === "desc" ? "-" : "") + sort.by);
+
+  const paramsWithoutPagination = params.toString();
+
+  const {
+    data: allItems,
+    isLoading: isAllItemsLoading,
+    error: allItemsError,
+  } = useQuery({
+    queryKey: [ADVERTISEMENTS_PROPS.endpoint, paramsWithoutPagination],
+    queryFn: () => getAdvertisements("?" + paramsWithoutPagination),
+  });
 
   paginationSize = paginationSize ?? DEFAULT_PAGINATION_SIZE;
   params.set("_page", "" + page);
   params.set("_per_page", "" + paginationSize);
-  sort && sort.by && params.set("_sort", (sort.direction === "desc" ? "-" : "") + sort.by);
 
   const {
     data,
@@ -28,15 +40,6 @@ export const useAdvertisements = ({ page, paginationSize, sort, priceRange, like
   } = useQuery({
     queryKey: [ADVERTISEMENTS_PROPS.endpoint, params.toString()],
     queryFn: () => getAdvertisements("?" + params.toString()),
-  });
-
-  const {
-    data: allItems,
-    isLoading: isAllItemsLoading,
-    error: allItemsError,
-  } = useQuery({
-    queryKey: [ADVERTISEMENTS_PROPS.endpoint],
-    queryFn: () => getAdvertisements(""),
   });
 
   const baseParamsEntries = params.entries();
