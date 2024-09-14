@@ -13,16 +13,15 @@ export type Range = {
 };
 
 export const RangeSelector = (
-  { children, dispatch, settings, type }
+  { children, dispatch, settings }
   : {
     children: ReactNode,
     dispatch: Dispatch<unknown>,
     settings: Range,
-    type: string
   },
 ) => {
   const handleRangeChange = useDebouncedCallback((event) => {
-    dispatch({ type, value: { ...settings, min: event[0], max: event[1] } });
+    dispatch({ type: settings.id, value: { ...settings, min: event[0], max: event[1] } });
   }, 1000);
 
   return <div>

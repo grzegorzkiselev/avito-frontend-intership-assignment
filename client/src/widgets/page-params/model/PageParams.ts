@@ -1,7 +1,8 @@
-import { DEFAULT_PAGINATION_SIZE } from "../../../shared";
+import { initialSettings } from "../../../pages/orders/model";
+import { ADVERTISEMENTS_PROPS, DEFAULT_PAGINATION_SIZE, useGetMinMaxValues } from "../../../shared";
 
 export const sortDirectionLabels = ["asc", "desc"] as const;
-
+export type SortConfig = Record<string, SortOption>;
 export type SortOption = {
   by: string,
   direction: typeof sortDirectionLabels[number],
@@ -37,6 +38,7 @@ export const actions = {
   },
   query(settings, action) {
     settings[action.type] = action.value.query;
+
     settings.currentUrl.searchParams.set(action.type, action.value.query);
 
     if (action.value.query.length < 1) {
@@ -50,14 +52,13 @@ export const actions = {
     settings.pagesCount = Math.ceil(filteredItems.length / settings.paginationSize) || 1;
 
     if (settings.page > settings.pagesCount) {
-      this.page(settings, action);
+      this.page = settings.pagesCount;
     }
 
     if (
       typeof action.value.query !== "string"
       || action.value.query.length < 2
     ) {
-      settings.pagesCount = settings.initialPagesCount;
       return;
     }
 
@@ -78,40 +79,18 @@ export const actions = {
     this.setProperty(settings, action);
     settings.sortLabel = (Array.from(action.value.target.children).find((element) => element.selected)).value;
     settings.currentUrl.searchParams.set("sortLabel", settings.sortLabel);
-    settings.sort = settings.sortConfig[settings.sortLabel];
+    settings.currentSortOption = settings.sortConfig[settings.sortLabel];
     settings.page = 1;
   },
   range(settings, action) {
-    this.setProperty(settings, action);
-    const rangeLink = settings[action.type] as Range;
-    settings.currentUrl.searchParams.set("max-" + action.type, "" + rangeLink.max);
+    settings.ranges[
+      settings.ranges.findIndex((range) => range.id === action.type)
+    ] = action.value;
+
+    settings.currentUrl.searchParams.set("min-" + action.type, "" + action.value.min);
+    settings.currentUrl.searchParams.set("max-" + action.type, "" + action.value.max);
   },
 };
-
-export type SortConfig = Record<string, SortOption>;
-
-export abstract class PageParams {
-  currentUrl = new URL(window.location.href);
-  page: number = Number(this.currentUrl.searchParams.get("page")) || 1;
-  paginationSize: number = Number(this.currentUrl.searchParams.get("paginationSize")) || DEFAULT_PAGINATION_SIZE;
-
-  pagesCount: number = 1;
-  ranges: Range[];
-  sortLabel: string;
-  sortOptions: SortOption[];
-  clientsideFilteredItems: [];
-
-  reduce: (action: { type: string, value: unknown }) => void;
-
-  constructor({
-    ranges, sortLabel, sortOptions, clientsideFilteredItems,
-  }) {
-    this.ranges = ranges;
-    this.sortLabel = sortLabel;
-    this.sortOptions = sortOptions;
-    this.clientsideFilteredItems = clientsideFilteredItems;
-  }
-}
 
 export const reducer = <S extends typeof initialSettings, T extends keyof typeof initialSettings>(settings: S, action: { type: T, value: S[T] }) => {
   const handler = actions[
@@ -132,3 +111,87 @@ export const reducer = <S extends typeof initialSettings, T extends keyof typeof
 
   return { ...settings };
 };
+
+export class PageParams {
+  /**
+   * State specific
+   */
+  currentUrl: URL = new URL(window.location.href);
+
+  /**
+   * Pagination specific
+   */
+  page: number = Number(this.currentUrl.searchParams.get("page")) || 1;
+  paginationSize: number = Number(this.currentUrl.searchParams.get("paginationSize")) || DEFAULT_PAGINATION_SIZE;
+  pagesCount: number = 1;
+
+  /**
+   * Sorting specific
+   */
+  selectedSortOption: SortOption;
+  sortLabel: string = "";
+  sortOptions: SortOption[] = [];
+
+  /**
+   * Filtering by range specific
+   * for different pages it should be different
+   * so we need to figure out how to make it
+   * configurable
+   * @todo combine into single array
+   */
+  ranges = [];
+
+  /**
+   * Client-side features
+   *
+   * @todo give it a generic name to abstract the logic
+   *
+   * Items to render.
+   * Should I paginate it right here instead of
+   * passing slice of this array in template?
+   *
+   * Client features based on some kind of filtering
+   * callback that dispatches new pagesCount and
+   * narrowed collection of already server-side
+   * ranged and sorted items
+   */
+  filteredItems = {
+    items: [],
+    getSliceForCurrentPage: () => {
+      const start = (this.page - 1) * this.paginationSize;
+      return this.filteredItems.items.slice(
+        start,
+        start + this.paginationSize,
+      );
+    },
+  };
+
+  protected reducer = reducer;
+
+  protected initSort = (sortConfig) => {
+    this.sortConfig = sortConfig;
+    const [defaultSortLabel, defaultSortOption] = Object.entries(this.sortConfig)[0];
+    this.sortLabel = this.currentUrl.searchParams.get("sortLabel") || defaultSortLabel;
+    this.currentSortOption = this.sortConfig[this.sortLabel] || defaultSortOption;
+  };
+
+  protected initRanges = (ranges) => ranges.forEach((range) => {
+    const { maxValueItem, isMinMaxValuesLoading, minMaxValueError } = useGetMinMaxValues(ADVERTISEMENTS_PROPS.endpoint, range.field);
+    range.isLoading = isMinMaxValuesLoading;
+    range.error = minMaxValueError;
+
+    range.min = Number(this.currentUrl.searchParams.get("min-" + range.id)) || 0;
+    range.max = Number(this.currentUrl.searchParams.get("max-" + range.id)) || Infinity;
+
+    if (!isMinMaxValuesLoading && !minMaxValueError) {
+      range.maxAvailable = maxValueItem?.data?.[0]?.[range.field];
+      if (range.max === Infinity) {
+        range.max = range.maxAvailable;
+      }
+    }
+    this.ranges = ranges;
+  });
+
+  constructor() {
+  }
+}

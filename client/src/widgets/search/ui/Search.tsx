@@ -3,12 +3,10 @@ import { useEventListener } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 
 export const Search = (
-  { value, type, onSearchChange, suggestions }: { value: string, type: string, suggestions?: string[], dispatch: Dispatch<unknown> } = {},
+  { value, onSearchChange, suggestions }: { value: string, type: string, suggestions?: string[], onSearchChange: (string) => void } = {},
 ) => {
-  console.log(suggestions);
   const applyChanges = (event) => {
     onSearchChange(event.currentTarget.value);
-    // dispatch({ type, value: event.currentTarget.value });
   };
   const ref = useEventListener("change", applyChanges);
 

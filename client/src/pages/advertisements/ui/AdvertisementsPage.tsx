@@ -3,9 +3,9 @@ import { useDisclosure } from "@mantine/hooks";
 import { useLayoutEffect, useReducer } from "react";
 import { AppSlots } from "../../../app";
 import { Advertisement, AdvertisementCard, CreateUpdateAdvertisementCard } from "../../../entities";
-import { ADVERTISEMENTS_PROPS, DEFAULT_PAGINATION_OPTIONS, ErrorMessage, getMinMaxValues } from "../../../shared";
-import { PaginationSelector, Range, RangeSelector, Search, SuspendedList } from "../../../widgets";
-import { filterableFields, initialSettings, reducer, sortConfig, updateMinMaxValues, useAdvertisements } from "../model";
+import { DEFAULT_PAGINATION_OPTIONS, ErrorMessage } from "../../../shared";
+import { PaginationSelector, RangeSelector, Search, SuspendedList } from "../../../widgets";
+import { AdvertisementsPageParams, useAdvertisements } from "../model";
 
 const advertisementMapper = (advertisement: Advertisement) => <AdvertisementCard {...advertisement} key={advertisement.id} />;
 const buildSearchFunction = (query, collection) => {
@@ -18,36 +18,35 @@ const buildSearchFunction = (query, collection) => {
 };
 
 export const AdvertisementsPage = () => {
-  const [settings, dispatch] = useReducer(reducer, initialSettings);
-  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
+  const pageParams = new AdvertisementsPageParams();
 
-  /** @todo move method into reducer */
-  filterableFields.forEach((field) => {
-    const value = settings[field + "Range"] as Range;
-    const { minValueItem, maxValueItem, isMinMaxValuesLoading, minMaxValueError } = getMinMaxValues(ADVERTISEMENTS_PROPS.endpoint, field);
-    value.isLoading = isMinMaxValuesLoading;
-    value.error = minMaxValueError;
-    updateMinMaxValues(isMinMaxValuesLoading, minMaxValueError, { minValueItem, maxValueItem, field, rangeLink: value });
-  });
+  const [settings, dispatch] = useReducer(pageParams.reducer, pageParams);
+  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
 
   const { data, allItems, isLoading, isAllItemsLoading, error, allItemsError } = useAdvertisements(settings);
   useLayoutEffect(() => {
-    if (!isLoading && !error && data) {
+    if (
+      !isLoading
+      && !error
+      && data
+    ) {
       dispatch({ type: "pagesCount", value: data.pages });
       dispatch({ type: "initialPagesCount", value: data.pages });
     }
   }, [data, isLoading, error]);
 
-  const handleSearchChange = (event) => {
+  const handleSearchChange = (event: string) => {
+    const actionValue = {
+      query: event,
+      filterFunction: buildSearchFunction(event, allItems),
+    };
+
     if (
       !isAllItemsLoading && !allItemsError
     ) {
       dispatch({
         type: "query",
-        value: {
-          query: event,
-          filterFunction: buildSearchFunction(event, allItems),
-        },
+        value: actionValue,
       });
     }
   };
@@ -63,20 +62,22 @@ export const AdvertisementsPage = () => {
       <Stack>
         <PaginationSelector paginationOptions={DEFAULT_PAGINATION_OPTIONS} value={settings.paginationSize} dispatch={dispatch}/>
         {
-          filterableFields.map((field) => {
-            const rangeName = field + "Range";
-            const rangeLink = settings[field + "Range"];
-
-            return settings[rangeName].isLoading
-              ? <Center key={rangeName + "-id-loader"}><Loader /></Center>
-              : rangeLink.error
-                ? <ErrorMessage key={rangeName + "-id-error"}>{ JSON.stringify(rangeLink.error, null, 2) }</ErrorMessage>
-                : rangeLink.max
-                  ? <RangeSelector field={field} key={rangeName + "-id-selector"} settings={rangeLink} dispatch={dispatch} type={rangeName}>{rangeLink.title}</RangeSelector>
-                  : <ErrorMessage key={rangeName + "-id-not-max"}>Не удалось загрузить данные</ErrorMessage>;
+          settings.ranges.map((range) => {
+            return range.isLoading
+              ? <Center key={range.id + "-id-loader"}><Loader /></Center>
+              : range.error
+                ? <ErrorMessage key={range.id + "-id-error"}>{ JSON.stringify(range.error, null, 2) }</ErrorMessage>
+                : range.max
+                  ? <RangeSelector key={range.id + "-id-selector"} settings={range} dispatch={dispatch}>{range.title}</RangeSelector>
+                  : <ErrorMessage key={range.id + "-id-not-max"}>Не удалось загрузить данные</ErrorMessage>;
           })
         }
-        <NativeSelect value={settings.sortLabel} onChange={(event) => dispatch({ type: "sortLabel", value: event })} label="Сортировать" data={Object.getOwnPropertyNames(sortConfig)} />
+        <NativeSelect
+          value={settings.sortLabel}
+          onChange={(event) => dispatch({ type: "sortLabel", value: event })}
+          label="Сортировать"
+          data={Object.keys(settings.sortConfig)}
+        />
       </Stack>
     }
     sidebar={
@@ -103,7 +104,6 @@ export const AdvertisementsPage = () => {
         isLoading={
           isLoading
           || isAllItemsLoading
-          || settings?.filteredItems.length > 0
         }
         error={error}
         items={
@@ -113,6 +113,5 @@ export const AdvertisementsPage = () => {
         }
       />
     </Stack>
-
   </AppSlots>;
 };
