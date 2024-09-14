@@ -27,7 +27,7 @@ export class OrdersPageParams extends PageParams {
     this.statusLabel = this.currentUrl.searchParams.get("statusLabel") as typeof this.statusLables[number] || this.statusLables[0],
     this.status = this.statusLables.indexOf(this.statusLabel) - 1;
 
-    // this.forItem = this.currentUrl.searchParams.get("forItem") || "";
+    this.forItem = this.currentUrl.searchParams.get("forItem") || "";
   }
 }
 

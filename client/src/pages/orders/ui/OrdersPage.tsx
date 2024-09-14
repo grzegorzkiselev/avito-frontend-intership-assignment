@@ -9,7 +9,31 @@ import { OrdersPageParams, useOrders } from "../model";
 const mapper = (order) => {
   return <OrderCard {...order} key={"order-" + order.id}/>;
 };
-let timerId = null;
+
+const findIncludes = (forItem, allItems, doneSignal) => {
+  return () => {
+    const filteredOrders = [];
+    for (const order of allItems) {
+      for (const item of order.items) {
+        if (item.id == forItem) {
+          filteredOrders.push(order);
+          break;
+        }
+      }
+    }
+
+    doneSignal();
+    return filteredOrders;
+  };
+
+  // const pagesCount = Math.ceil(filteredOrders.length / settings.paginationSize) || 1;
+  // dispatch({ type: "pagesCount", value: pagesCount });
+  // dispatch({ type: "filteredOrders", value: filteredOrders });
+  // setIsCustomLoading(() => false);
+  // clearTimeout(timerId);
+};
+
+// const timerId = null;
 
 export const OrdersPage = () => {
   const pageParams = new OrdersPageParams();
@@ -17,58 +41,37 @@ export const OrdersPage = () => {
   const { data, isLoading, error, allItems, isAllItemsLoading, allItemsError } = useOrders(settings);
   const [isCustomLoading, setIsCustomLoading] = useState(true);
 
-  const findIncludes = () => {
-    /**
-     * () => {
-     *   const filteredOrders = [];
-     *   for (const order of allItems) {
-     *     for (const item of order.items) {
-     *       if (item.id == settings.forItem) {
-     *         filteredOrders.push(order);
-     *         break;
-     *       }
-     *     }
-     *   }
-     *  return filteredOrders;
-     * }
-     */
-    const filteredOrders = [];
-    for (const order of allItems) {
-      for (const item of order.items) {
-        if (item.id == settings.forItem) {
-          filteredOrders.push(order);
-          break;
-        }
-      }
-    }
-    const pagesCount = Math.ceil(filteredOrders.length / settings.paginationSize) || 1;
-    dispatch({ type: "pagesCount", value: pagesCount });
-    dispatch({ type: "filteredOrders", value: filteredOrders });
-    setIsCustomLoading(() => false);
-    clearTimeout(timerId);
-  };
-
-  useEffect(() => {
-    setIsCustomLoading(() => true);
-    if (settings.forItem) {
-      timerId = setTimeout(findIncludes);
-    }
-    return () => clearTimeout(timerId);
-  }, [allItems, isAllItemsLoading, allItemsError]);
-
   if (!settings.forItem) {
-    settings.filteredOrders = null;
     if (!isLoading && !error && data) {
       settings.pagesCount = data.pages;
     }
   }
 
-  const first = (settings.page - 1) * settings.paginationSize;
-  const last = first + settings.paginationSize;
+  useEffect(() => {
+    if (
+      settings.forItem
+      && !isAllItemsLoading
+      && !allItemsError
+    ) {
+      setIsCustomLoading(() => true);
+      dispatch({
+        type: "forItem",
+        value: {
+          filterFunction: findIncludes(
+            settings.forItem,
+            allItems,
+            () => setIsCustomLoading(() => false),
+          ),
+        } });
+    }
+  }, [allItems, isAllItemsLoading, allItemsError]);
 
-  handleStatusChanged(event) => {
-
-  }
+  const handleSortChange = (event) => {
+    dispatch({ type: "sortLabel", value: event });
+  };
+  const handleStatusChanged = (event) => {
+    dispatch({ type: "statusLabel", value: event });
+  };
 
   return <AppSlots
     adaptiveSidebar={
@@ -76,21 +79,20 @@ export const OrdersPage = () => {
         <PaginationSelector paginationOptions={DEFAULT_PAGINATION_OPTIONS} value={settings.paginationSize} dispatch={dispatch} />
         <NativeSelect
           value={settings.sortLabel}
-          onChange={(event) => dispatch({ type: "sortLabel", value: event })}
+          onChange={handleSortChange}
           label="Сортировать"
           data={Object.keys(settings.sortConfig)}
         />
         <NativeSelect
           value={settings.statusLabel}
-          onChange={}
+          onChange={handleStatusChanged}
           label="Со статусом"
-          data={handleStatusChanged}
+          data={settings.statusLables}
         />
       </Stack>
     }
   >
     <Stack>
-
       <SuspendedList
         settings={settings}
         dispatch={dispatch}
@@ -107,7 +109,7 @@ export const OrdersPage = () => {
         }
         items={
           settings.forItem
-            ? settings.filteredOrders?.slice(first, last)
+            ? settings.filteredItems.getSliceForCurrentPage()
             : data?.data
         }
       />

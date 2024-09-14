@@ -1,13 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-import { DEFAULT_PAGINATION_SIZE, ORDERS_PROPS, queryClient } from "../../../shared";
+import { DEFAULT_PAGINATION_SIZE, ORDERS_PROPS } from "../../../shared";
 import { getOrders } from "../api";
 
 export const useOrders = ({ page, paginationSize, currentSortOption, status }) => {
   const params = new URLSearchParams();
-  currentSortOption && currentSortOption.by && params.set("_sort", (currentSortOption.direction === "desc" ? "-" : "") + currentSortOption.by);
+
+  console.log(currentSortOption);
+  currentSortOption && currentSortOption.by && params.set(
+    "_sort",
+    (currentSortOption.direction === "desc" ? "-" : "") + currentSortOption.by,
+  );
   status >= 0 && params.set("status", "" + status);
 
   const paramsWithoutPagination = params.toString();
+
+  console.log(paramsWithoutPagination);
 
   const {
     data: allItems,
@@ -31,31 +38,31 @@ export const useOrders = ({ page, paginationSize, currentSortOption, status }) =
     queryFn: () => getOrders("?" + params.toString()),
   });
 
-  const baseParamsEntries = params.entries();
+  // const baseParamsEntries = params.entries();
 
-  const nextPageParams = new URLSearchParams([
-    ...baseParamsEntries,
-    ["_page", String(page + 1)],
-    ["_per_page", "" + paginationSize],
-  ]);
+  // const nextPageParams = new URLSearchParams([
+  //   ...baseParamsEntries,
+  //   ["_page", String(page + 1)],
+  //   ["_per_page", "" + paginationSize],
+  // ]);
 
-  queryClient.prefetchQuery({
-    queryKey: [ORDERS_PROPS.endpoint, nextPageParams.toString()],
-    queryFn: () => getOrders("?" + nextPageParams.toString()),
-  });
+  // queryClient.prefetchQuery({
+  //   queryKey: [ORDERS_PROPS.endpoint, nextPageParams.toString()],
+  //   queryFn: () => getOrders("?" + nextPageParams.toString()),
+  // });
 
-  if (page > 1) {
-    const previousPageParams = new URLSearchParams([
-      ...baseParamsEntries,
-      ["_page", String(page - 1)],
-      ["_per_page", "" + paginationSize],
-    ]);
+  // if (page > 1) {
+  //   const previousPageParams = new URLSearchParams([
+  //     ...baseParamsEntries,
+  //     ["_page", String(page - 1)],
+  //     ["_per_page", "" + paginationSize],
+  //   ]);
 
-    queryClient.prefetchQuery({
-      queryKey: [ORDERS_PROPS.endpoint, previousPageParams.toString()],
-      queryFn: () => getOrders("?" + previousPageParams.toString()),
-    });
-  }
+  //   queryClient.prefetchQuery({
+  //     queryKey: [ORDERS_PROPS.endpoint, previousPageParams.toString()],
+  //     queryFn: () => getOrders("?" + previousPageParams.toString()),
+  //   });
+  // }
 
   return { data, isLoading, error, allItems, isAllItemsLoading, allItemsError };
 };

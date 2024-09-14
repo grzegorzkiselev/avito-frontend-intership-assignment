@@ -66,6 +66,16 @@ export const actions = {
     settings.searchHistory.length = Math.min(5, settings.searchHistory.length);
     localStorage.setItem("searchHistory", JSON.stringify(settings.searchHistory));
   },
+  forItem(settings, action) {
+    setTimeout(() => {
+      const filteredItems = action.value.filterFunction();
+      settings.filteredItems.items = filteredItems;
+      settings.pagesCount = Math.ceil(filteredItems.length / settings.paginationSize) || 1;
+      if (settings.page > settings.pagesCount) {
+        this.page = settings.pagesCount;
+      }
+    });
+  },
   statusLabel(settings, action) {
     this.setProperty(settings, action);
     const selectedOptionIndex = Array.from(action.value.target.children).findIndex((element) => element.selected);
@@ -80,6 +90,7 @@ export const actions = {
     settings.sortLabel = (Array.from(action.value.target.children).find((element) => element.selected)).value;
     settings.currentUrl.searchParams.set("sortLabel", settings.sortLabel);
     settings.currentSortOption = settings.sortConfig[settings.sortLabel];
+    console.log( settings.currentSortOption);
     settings.page = 1;
   },
   range(settings, action) {
@@ -115,7 +126,12 @@ export const actions = {
     settings.filteredItems.items = [];
   },
   statusLabel(settings, action) {
-
+    const selectedOptionIndex = Array.from(action.value.target.children).findIndex((element) => element.selected);
+    settings[action.type] = settings.statusLables[selectedOptionIndex];
+    settings.status = selectedOptionIndex  - 1;
+    settings.currentUrl.searchParams.set(action.type, settings[action.type]);
+    settings.page = 1;
+    // settings.sort = sortConfig[settings.sortLabel];
   },
 };
 
