@@ -8,6 +8,9 @@ export type SortOption = {
 };
 
 export const actions = {
+  setProperty(settings, action) {
+    settings[action.type] = action.value;
+  },
   updateSearchParams(settings, action) {
     settings.currentUrl.searchParams.set(action.type, "" + settings[action.type]);
   },
@@ -18,26 +21,52 @@ export const actions = {
       console.error(error);
     }
   },
+  pagesCount(settings, action) {
+    this.setProperty(settings, action);
+  },
+  initialPagesCount(settings, action) {
+    this.setProperty(settings, action);
+  },
   page(settings, action) {
+    this.setProperty(settings, action);
     this.updateSearchParams(settings, action);
   },
   paginationSize(settings, action) {
+    this.setProperty(settings, action);
     this.updateSearchParams(settings, action);
   },
   query(settings, action) {
-    if (
-      typeof action.value !== "string"
-      || action.value.length < 2
-    ) {
+    settings[action.type] = action.value.query;
+    settings.currentUrl.searchParams.set(action.type, action.value.query);
+
+    if (action.value.query.length < 1) {
+      settings.filteredItems.items.length = 0;
+      settings.pagesCount = settings.initialPagesCount;
       return;
     }
 
-    !settings.searchHistory.includes(action.value) && settings.searchHistory.unshift(action.value);
+    const filteredItems = action.value.filterFunction();
+    settings.filteredItems.items = filteredItems;
+    settings.pagesCount = Math.ceil(filteredItems.length / settings.paginationSize) || 1;
+
+    if (settings.page > settings.pagesCount) {
+      this.page(settings, action);
+    }
+
+    if (
+      typeof action.value.query !== "string"
+      || action.value.query.length < 2
+    ) {
+      settings.pagesCount = settings.initialPagesCount;
+      return;
+    }
+
+    !settings.searchHistory.includes(action.value.query) && settings.searchHistory.unshift(action.value.query);
     settings.searchHistory.length = Math.min(5, settings.searchHistory.length);
     localStorage.setItem("searchHistory", JSON.stringify(settings.searchHistory));
-    this.updateSearchParams(settings, action);
   },
   statusLabel(settings, action) {
+    this.setProperty(settings, action);
     const selectedOptionIndex = Array.from(action.value.target.children).findIndex((element) => element.selected);
     settings[action.type] = settings.statusSelectConfig[selectedOptionIndex];
     settings.status = selectedOptionIndex  - 1;
@@ -46,12 +75,14 @@ export const actions = {
     settings.page = 1;
   },
   sortLabel(settings, action) {
+    this.setProperty(settings, action);
     settings.sortLabel = (Array.from(action.value.target.children).find((element) => element.selected)).value;
     settings.currentUrl.searchParams.set("sortLabel", settings.sortLabel);
     settings.sort = settings.sortConfig[settings.sortLabel];
     settings.page = 1;
   },
   range(settings, action) {
+    this.setProperty(settings, action);
     const rangeLink = settings[action.type] as Range;
     settings.currentUrl.searchParams.set("max-" + action.type, "" + rangeLink.max);
   },
@@ -83,12 +114,15 @@ export abstract class PageParams {
 }
 
 export const reducer = <S extends typeof initialSettings, T extends keyof typeof initialSettings>(settings: S, action: { type: T, value: S[T] }) => {
-  settings[action.type] = action.value;
-  actions[
-    action.type.endsWith("Range")
+  const handler = actions[
+    (action.type.endsWith("Range")
       ? "range"
       : action.type
-  ]?.(settings, action);
+    )];
+
+  handler
+    ? handler.call(actions, settings, action)
+    : console.error("No handler for action:", action.type);
 
   try {
     actions.applySearchParams(settings);
@@ -98,65 +132,3 @@ export const reducer = <S extends typeof initialSettings, T extends keyof typeof
 
   return { ...settings };
 };
-
-// const prepare: {
-//   query: string,
-//   searchHistory: string[],
-//   page: number,
-//   paginationSize: number,
-//   pagesCount: number,
-//   /** @todo rewrite duplicates as template literal types */
-//   // [key: `${typeof filterableFields[number]}Range`]: Range,
-//   priceRange: Range,
-//   viewsRange: Range,
-//   likesRange: Range,
-//   sortLabel: keyof typeof sortConfig,
-//   sort: sortOption,
-//   filteredAdvertisements: Advertisement[] | null
-// } = {
-//   query: currentUrl.searchParams.get("query") || "",
-//   searchHistory: (() => {
-//     try {
-//       return JSON.parse(localStorage.getItem("searchHistory") || "") || [];
-//     } catch(error) {
-//       return [];
-//     }
-//   })(),
-//
-//   page: Number(currentUrl.searchParams.get("page")) || 1,
-//   paginationSize: Number(currentUrl.searchParams.get("paginationSize")) || DEFAULT_PAGINATION_SIZE,
-//   pagesCount: 1,
-//   priceRange: {
-//     title: "Диапазон цен",
-//     isLoading: true,
-//     error: null,
-//     minAvailable: 0,
-//     maxAvailable: Infinity,
-//     min: Number(currentUrl.searchParams.get("min-priceRange")) || 0,
-//     max: Number(currentUrl.searchParams.get("max-priceRange")) || Infinity,
-//   },
-//   viewsRange: {
-//     title: "Диапазон просмотров",
-//     isLoading: true,
-//     error: null,
-//     minAvailable: 0,
-//     maxAvailable: Infinity,
-//     min: Number(currentUrl.searchParams.get("min-viewsRange")) || 0,
-//     max: Number(currentUrl.searchParams.get("max-viewsRange")) || Infinity,
-//   },
-//   likesRange: {
-//     title: "Диапазон лайков",
-//     isLoading: true,
-//     error: null,
-//     minAvailable: 0,
-//     maxAvailable: Infinity,
-//     min: Number(currentUrl.searchParams.get("min-likesRange")) || 0,
-//     max: Number(currentUrl.searchParams.get("max-likesRange")) || Infinity,
-//   },
-//   sortLabel: currentUrl.searchParams.get("sortLabel") as keyof typeof sortConfig || Object.keys(sortConfig)[0],
-//   sort: Object.values(sortConfig)[0],
-//   filteredAdvertisements: null,
-// };
-// prepare.sort = sortConfig[prepare.sortLabel];
-
-// return prepare;

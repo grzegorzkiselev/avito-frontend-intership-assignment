@@ -1,5 +1,6 @@
+import { Advertisement } from "../../../entities";
 import { DEFAULT_PAGINATION_SIZE } from "../../../shared";
-import { Range, SortConfig } from "../../../widgets";
+import { Range, SortConfig, SortOption } from "../../../widgets";
 
 /** not a double with ¹, just a considence, no need to deduplicate */
 export const filterableFields = ["price", "views", "likes"] as const;
@@ -46,6 +47,12 @@ export const initialSettings = ((currentUrl) => {
     pagesCount: number,
 
     /**
+     * Sorting specific
+     */
+    sortLabel: keyof typeof sortConfig,
+    sort: SortOption,
+
+    /**
      * Filtering by range specific
      * for different pages it should be different
      * so we need to figure out how to make it
@@ -55,12 +62,6 @@ export const initialSettings = ((currentUrl) => {
     priceRange: Range,
     viewsRange: Range,
     likesRange: Range,
-
-    /**
-     * Sorting specific
-     */
-    sortLabel: keyof typeof sortConfig,
-    sort: SortOption,
 
     /**
      * Client-side features
@@ -76,6 +77,14 @@ export const initialSettings = ((currentUrl) => {
      * narrowed collection of already server-side
      * ranged and sorted items
      */
+    filteredItems: {
+      items: unknown[],
+
+      /**
+       * Method to get current page will be useful
+       */
+      getSliceForCurrentPage: () => void
+    },
     filteredAdvertisements: Advertisement[] | null
 
     /**
@@ -129,8 +138,19 @@ export const initialSettings = ((currentUrl) => {
     sortLabel: currentUrl.searchParams.get("sortLabel") as keyof typeof sortConfig || Object.keys(sortConfig)[0],
     sort: Object.values(sortConfig)[0],
     filteredAdvertisements: null,
+    filteredItems: {
+      items: [],
+      getSliceForCurrentPage: function() {
+        const start = (this.page - 1) * this.paginationSize;
+        return this.filteredItems.items.slice(
+          start,
+          start + this.paginationSize,
+        );
+      },
+    },
   };
   prepare.sort = sortConfig[prepare.sortLabel];
+  prepare.filteredItems.getSliceForCurrentPage = prepare.filteredItems.getSliceForCurrentPage.bind(prepare);
 
   return prepare;
 })(new URL(window.location.href));

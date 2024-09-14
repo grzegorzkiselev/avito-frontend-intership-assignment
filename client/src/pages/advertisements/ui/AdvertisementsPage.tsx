@@ -1,6 +1,6 @@
 import { Button, Center, Loader, Modal, NativeSelect, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useEffect, useReducer } from "react";
+import { useLayoutEffect, useReducer } from "react";
 import { AppSlots } from "../../../app";
 import { Advertisement, AdvertisementCard, CreateUpdateAdvertisementCard } from "../../../entities";
 import { ADVERTISEMENTS_PROPS, DEFAULT_PAGINATION_OPTIONS, ErrorMessage, getMinMaxValues } from "../../../shared";
@@ -8,11 +8,20 @@ import { PaginationSelector, Range, RangeSelector, Search, SuspendedList } from 
 import { filterableFields, initialSettings, reducer, sortConfig, updateMinMaxValues, useAdvertisements } from "../model";
 
 const advertisementMapper = (advertisement: Advertisement) => <AdvertisementCard {...advertisement} key={advertisement.id} />;
+const buildSearchFunction = (query, collection) => {
+  return () => {
+    const searchReg = new RegExp(query, "i");
+    return collection.filter((item) => {
+      return item.name.toLowerCase().match(searchReg);
+    });
+  };
+};
 
 export const AdvertisementsPage = () => {
   const [settings, dispatch] = useReducer(reducer, initialSettings);
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
 
+  /** @todo move method into reducer */
   filterableFields.forEach((field) => {
     const value = settings[field + "Range"] as Range;
     const { minValueItem, maxValueItem, isMinMaxValuesLoading, minMaxValueError } = getMinMaxValues(ADVERTISEMENTS_PROPS.endpoint, field);
@@ -22,44 +31,32 @@ export const AdvertisementsPage = () => {
   });
 
   const { data, allItems, isLoading, isAllItemsLoading, error, allItemsError } = useAdvertisements(settings);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isLoading && !error && data) {
       dispatch({ type: "pagesCount", value: data.pages });
+      dispatch({ type: "initialPagesCount", value: data.pages });
     }
-  }, [data, isLoading]);
+  }, [data, isLoading, error]);
 
-  /** @todo reuse this logic */
-  useEffect(() => {
-    if (!isLoading && !error && data) {
-      let pagesCount = data.pages;
-
-      if (
-        settings.query
-        && settings.query.length > 2
-        && !isAllItemsLoading
-        && !allItemsError
-      ) {
-        const searchReg = new RegExp(settings.query, "i");
-        const filteredAdvertisements = allItems.filter((advertisement) => {
-          return advertisement.name.toLowerCase().match(searchReg);
-        });
-        pagesCount = Math.ceil(filteredAdvertisements.length / settings.paginationSize) || 1;
-        dispatch({ type: "filteredAdvertisements", value: filteredAdvertisements });
-
-        if (settings.page > pagesCount) {
-          dispatch({ type: "page", value: pagesCount });
-        }
-      } else {
-        settings.filteredAdvertisements = null;
-      }
-
-      dispatch({ type: "pagesCount", value: pagesCount });
+  const handleSearchChange = (event) => {
+    if (
+      !isAllItemsLoading && !allItemsError
+    ) {
+      dispatch({
+        type: "query",
+        value: {
+          query: event,
+          filterFunction: buildSearchFunction(event, allItems),
+        },
+      });
     }
-  }, [data, allItems, isLoading, isAllItemsLoading, settings.query]);
+  };
 
-  /** @duplicate ¹ */
-  const first = (settings.page - 1) * settings.paginationSize;
-  const last = first + settings.paginationSize;
+  useLayoutEffect(() => {
+    if (!isAllItemsLoading && !allItemsError && allItems) {
+      handleSearchChange(settings.query);
+    }
+  }, [isAllItemsLoading, allItemsError, allItems]);
 
   return <AppSlots
     adaptiveSidebar={
@@ -93,16 +90,25 @@ export const AdvertisementsPage = () => {
     }
   >
     <Stack>
-      <Search suggestions={settings.searchHistory} type="query" value={settings.query} dispatch={dispatch} />
+      <Search
+        suggestions={settings.searchHistory}
+        type="query"
+        value={settings.query}
+        onSearchChange={handleSearchChange}
+      />
       <SuspendedList
         settings={settings}
         dispatch={dispatch}
         mapper={advertisementMapper}
-        isLoading={isLoading}
+        isLoading={
+          isLoading
+          || isAllItemsLoading
+          || settings?.filteredItems.length > 0
+        }
         error={error}
         items={
           settings.query
-            ? settings?.filteredAdvertisements?.slice(first, last)
+            ? settings?.filteredItems?.getSliceForCurrentPage()
             : data?.data
         }
       />

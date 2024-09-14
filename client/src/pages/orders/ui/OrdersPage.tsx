@@ -17,6 +17,20 @@ export const OrdersPage = () => {
   const [isCustomLoading, setIsCustomLoading] = useState(true);
 
   const findIncludes = () => {
+    /**
+     * () => {
+     *   const filteredOrders = [];
+     *   for (const order of allItems) {
+     *     for (const item of order.items) {
+     *       if (item.id == settings.forItem) {
+     *         filteredOrders.push(order);
+     *         break;
+     *       }
+     *     }
+     *   }
+     *  return filteredOrders;
+     * }
+     */
     const filteredOrders = [];
     for (const order of allItems) {
       for (const item of order.items) {

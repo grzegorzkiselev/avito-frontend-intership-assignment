@@ -20,6 +20,10 @@ export const sortConfig: SortConfig = {
 export const initialSettings = ((currentUrl) => {
   const prepare: {
     /**
+     * State specific
+     */
+    currentUrl: URL
+    /**
      * Pagination specific
      */
     page: number,
@@ -32,6 +36,7 @@ export const initialSettings = ((currentUrl) => {
     sortLabel: keyof typeof sortConfig,
     sort: SortOption,
 
+    filteredItems: unknown[] | null
     /** @todo give it a generic name to abstract the logic */
     filteredOrders: Order[] | null,
 
