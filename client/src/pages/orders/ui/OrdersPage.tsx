@@ -4,15 +4,16 @@ import { AppSlots } from "../../../app";
 import { OrderCard } from "../../../entities";
 import { DEFAULT_PAGINATION_OPTIONS } from "../../../shared";
 import { PaginationSelector, SuspendedList } from "../../../widgets";
-import { initialSettings, reducer, sortConfig, statusSelectConfig, useOrders } from "../model";
+import { OrdersPageParams, useOrders } from "../model";
 
 const mapper = (order) => {
   return <OrderCard {...order} key={"order-" + order.id}/>;
 };
-
 let timerId = null;
+
 export const OrdersPage = () => {
-  const [settings, dispatch] = useReducer(reducer, initialSettings);
+  const pageParams = new OrdersPageParams();
+  const [settings, dispatch] = useReducer(pageParams.reducer, pageParams);
   const { data, isLoading, error, allItems, isAllItemsLoading, allItemsError } = useOrders(settings);
   const [isCustomLoading, setIsCustomLoading] = useState(true);
 
@@ -65,12 +66,26 @@ export const OrdersPage = () => {
   const first = (settings.page - 1) * settings.paginationSize;
   const last = first + settings.paginationSize;
 
+  handleStatusChanged(event) => {
+
+  }
+
   return <AppSlots
     adaptiveSidebar={
       <Stack>
         <PaginationSelector paginationOptions={DEFAULT_PAGINATION_OPTIONS} value={settings.paginationSize} dispatch={dispatch} />
-        <NativeSelect value={settings.sortLabel} onChange={(event) => dispatch({ type: "sortLabel", value: event })} label="Сортировать" data={Object.getOwnPropertyNames(sortConfig)} />
-        <NativeSelect value={settings.statusLabel} onChange={(event) => dispatch({ type: "statusLabel", value: event })} label="Со статусом" data={statusSelectConfig} />
+        <NativeSelect
+          value={settings.sortLabel}
+          onChange={(event) => dispatch({ type: "sortLabel", value: event })}
+          label="Сортировать"
+          data={Object.keys(settings.sortConfig)}
+        />
+        <NativeSelect
+          value={settings.statusLabel}
+          onChange={}
+          label="Со статусом"
+          data={handleStatusChanged}
+        />
       </Stack>
     }
   >

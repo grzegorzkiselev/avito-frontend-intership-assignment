@@ -1,6 +1,6 @@
 import { Button, Center, Loader, Modal, NativeSelect, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useLayoutEffect, useReducer } from "react";
+import { useEffect, useLayoutEffect, useReducer } from "react";
 import { AppSlots } from "../../../app";
 import { Advertisement, AdvertisementCard, CreateUpdateAdvertisementCard } from "../../../entities";
 import { DEFAULT_PAGINATION_OPTIONS, ErrorMessage } from "../../../shared";
@@ -19,8 +19,25 @@ const buildSearchFunction = (query, collection) => {
 
 export const AdvertisementsPage = () => {
   const pageParams = new AdvertisementsPageParams();
-
   const [settings, dispatch] = useReducer(pageParams.reducer, pageParams);
+
+  /** I use uncontrolled components for ranges and query
+    * and when I drop values, they stays the same
+    * need to figure out, how to deal with it.
+    * First idea — useRef, we can initialize useRef for each range.
+    * But want we?
+    */
+  // const reset = () => {
+  //   dispatch({ type: "resetRanges" });
+  //   dispatch({ type: "resetSort" });
+  //   dispatch({ type: "resetQuery" });
+  //   dispatch({ type: "reset" });
+  // };
+
+  useEffect(() => {
+    settings.query = settings.query;
+  }, [settings.query]);
+
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
 
   const { data, allItems, isLoading, isAllItemsLoading, error, allItemsError } = useAdvertisements(settings);
@@ -68,7 +85,7 @@ export const AdvertisementsPage = () => {
               : range.error
                 ? <ErrorMessage key={range.id + "-id-error"}>{ JSON.stringify(range.error, null, 2) }</ErrorMessage>
                 : range.max
-                  ? <RangeSelector key={range.id + "-id-selector"} settings={range} dispatch={dispatch}>{range.title}</RangeSelector>
+                  ? <RangeSelector key={range.id + "-id-selector"} settings={{ ...range }} dispatch={dispatch}>{range.title}</RangeSelector>
                   : <ErrorMessage key={range.id + "-id-not-max"}>Не удалось загрузить данные</ErrorMessage>;
           })
         }
@@ -85,6 +102,8 @@ export const AdvertisementsPage = () => {
         <Modal opened={modalOpened} onClose={closeModal}>
           <CreateUpdateAdvertisementCard close={closeModal} />
         </Modal>
+
+        {/* <Button onClick={reset}>Сбросить фильтр</Button> */}
 
         <Button onClick={openModal}>Создать объявление</Button>
       </>

@@ -28,6 +28,14 @@ export const RangeSelector = (
     <Text size="sm" fw={500} mb={8}>
       { children }
     </Text>
-    <RangeSlider onChange={handleRangeChange} size="sm" minRange={1} min={settings.minAvailable} max={settings.maxAvailable} step={1} defaultValue={[settings.min, settings.max]} />
+    <RangeSlider
+      onChange={handleRangeChange}
+      size="sm"
+      minRange={1}
+      min={settings.minAvailable}
+      max={settings.maxAvailable}
+      step={1}
+      defaultValue={[settings.min, settings.max]}
+    />
   </div>;
 };

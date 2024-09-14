@@ -90,6 +90,33 @@ export const actions = {
     settings.currentUrl.searchParams.set("min-" + action.type, "" + action.value.min);
     settings.currentUrl.searchParams.set("max-" + action.type, "" + action.value.max);
   },
+  reset(settings) {
+    settings.page = 1;
+    settings.pagesCount = settings.initialPagesCount;
+    settings.paginationSize = DEFAULT_PAGINATION_SIZE;
+
+    settings.currentUrl.searchParams.forEach((_, param) => {
+      settings.currentUrl.searchParams.delete(param);
+    });
+  },
+  resetRanges(settings) {
+    settings.ranges.forEach((range) => {
+      range.min = range.minAvailable;
+      range.max = range.maxAvailable;
+    });
+  },
+  resetSort(settings) {
+    const [defaultSortLabel, defaultSortOption] = Object.entries(settings.sortConfig)[0];
+    settings.sortLabel = defaultSortLabel;
+    settings.currentSortOption = defaultSortOption;
+  },
+  resetQuery(settings) {
+    settings.query = "";
+    settings.filteredItems.items = [];
+  },
+  statusLabel(settings, action) {
+
+  },
 };
 
 export const reducer = <S extends typeof initialSettings, T extends keyof typeof initialSettings>(settings: S, action: { type: T, value: S[T] }) => {
@@ -128,7 +155,7 @@ export class PageParams {
   /**
    * Sorting specific
    */
-  selectedSortOption: SortOption;
+  currentSortOption: SortOption;
   sortLabel: string = "";
   sortOptions: SortOption[] = [];
 

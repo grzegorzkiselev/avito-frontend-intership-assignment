@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { DEFAULT_PAGINATION_SIZE, ORDERS_PROPS, queryClient } from "../../../shared";
 import { getOrders } from "../api";
 
-export const useOrders = ({ page, paginationSize, sort, status }) => {
+export const useOrders = ({ page, paginationSize, currentSortOption, status }) => {
   const params = new URLSearchParams();
-  sort && sort.by && params.set("_sort", (sort.direction === "desc" ? "-" : "") + sort.by);
+  currentSortOption && currentSortOption.by && params.set("_sort", (currentSortOption.direction === "desc" ? "-" : "") + currentSortOption.by);
   status >= 0 && params.set("status", "" + status);
 
   const paramsWithoutPagination = params.toString();
