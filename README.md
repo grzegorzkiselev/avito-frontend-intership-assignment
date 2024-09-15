@@ -53,6 +53,8 @@
 
     ни при одном из выбранных фильтров страница не должна быть больше, чем общее количество страниц
 
+    если при нахождении на второй странице найти какой-нибудь единственный элемент, должен произойти переход на первую страницу
+
     по итогам выполненного сценария в адресной строке: 
       http://localhost:5173/advertisements?paginationSize=25&page=1&query=sed&min-priceRange=0&max-priceRange=1000&min-viewsRange=4&max-viewsRange=2000000&min-likesRange=0&max-likesRange=302
 
