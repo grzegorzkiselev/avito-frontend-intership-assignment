@@ -5,6 +5,7 @@ import { AppSlots } from "../../../app";
 import { Advertisement, AdvertisementCard, CreateUpdateAdvertisementCard } from "../../../entities";
 import { DEFAULT_PAGINATION_OPTIONS, ErrorMessage } from "../../../shared";
 import { PaginationSelector, RangeSelector, Search, SuspendedList } from "../../../widgets";
+import { MinMaxSelector, PaginationSelector, Search, SuspendedList } from "../../../widgets";
 import { AdvertisementsPageParams, useAdvertisements } from "../model";
 
 const advertisementMapper = (advertisement: Advertisement) => <AdvertisementCard {...advertisement} key={advertisement.id} />;
@@ -85,8 +86,9 @@ export const AdvertisementsPage = () => {
               : range.error
                 ? <ErrorMessage key={range.id + "-id-error"}>{ JSON.stringify(range.error, null, 2) }</ErrorMessage>
                 : range.max
-                  ? <RangeSelector key={range.id + "-id-selector"} settings={{ ...range }} dispatch={dispatch}>{range.title}</RangeSelector>
+                  ? <MinMaxSelector dispatch={dispatch} range={{ ...range }}>{range.title}</MinMaxSelector>
                   : <ErrorMessage key={range.id + "-id-not-max"}>Не удалось загрузить данные</ErrorMessage>;
+            {/*<RangeSelector key={range.id + "-id-selector"} range={{ ...range }} dispatch={dispatch}>{range.title}</RangeSelector>*/}
           })
         }
         <NativeSelect
