@@ -86,6 +86,10 @@ function queryAction(settings: AdvertisementsPageParams, action: {
   settings.filteredItems.items = filteredItems;
   settings.pagesCount = Math.ceil(filteredItems.length / settings.paginationSize) || 1;
 
+  if (settings.pagesCount < settings.page) {
+    settings.page = settings.pagesCount;
+  }
+
   if (
     typeof action.value.query !== "string"
     || action.value.query.length < 2
