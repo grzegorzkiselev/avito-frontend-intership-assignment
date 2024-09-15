@@ -1,10 +1,10 @@
 import { renderHook } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
-import { QueryProvider } from "../../../../app/providers";
-import { useAdvertisements } from "../useAdvertisements";
-import { pagination_test_happy_path } from "./mocks";
-import { server } from "./server";
+import { QueryProvider } from "../../../app/providers";
+import { pagination_test_happy_path } from "./handlers/mocks";
+import { server } from "./handlers/server";
+import { useAdvertisements } from "./useAdvertisements";
 
 describe("Advertisements api interactoins", () => {
   it("Filtering test", async () => {

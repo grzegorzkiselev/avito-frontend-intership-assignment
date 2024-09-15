@@ -7,7 +7,7 @@ export const useAdvertisements = ({ page, paginationSize, currentSortOption, ran
   const queryClient = useQueryClient();
   const params = new URLSearchParams();
 
-  ranges.forEach((range) => {
+  ranges?.forEach((range) => {
     range?.min && params.set(range.field + "_gte", "" + range.min);
     Number.isFinite(range?.max) && params.set(range.field + "_lte", "" + range.max);
   });
