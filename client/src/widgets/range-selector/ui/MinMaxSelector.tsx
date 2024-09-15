@@ -33,12 +33,24 @@ export const MinMaxSelector = (
         handleRangeChange(event, "min");
       }}
       style={style}
-      size="xs" placeholder={String(range.minAvailable)} min={range.minAvailable} max={range.maxAvailable - minRange} defaultValue={range.minAvailable}/>
+      size="xs"
+      placeholder={String(range.minAvailable)}
+      min={range.minAvailable}
+      max={range.maxAvailable - minRange}
+      defaultValue={range.minAvailable}
+      value={range.min}
+      />
       <NumberInput onChange={(event) => {
         handleRangeChange(event, "max");
       }}
       style={style}
-      size="xs" placeholder={String(range.maxAvailable)} min={range.minAvailable + minRange} max={range.maxAvailable} defaultValue={range.maxAvailable}/>
+      size="xs"
+      placeholder={String(range.maxAvailable)}
+      min={range.minAvailable + minRange}
+      max={range.maxAvailable}
+      defaultValue={range.maxAvailable}
+      value={range.max}
+      />
     </Flex>
   </div>;
 };
