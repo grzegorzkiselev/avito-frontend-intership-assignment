@@ -80,15 +80,17 @@ export const AdvertisementsPage = () => {
       <Stack>
         <PaginationSelector paginationOptions={DEFAULT_PAGINATION_OPTIONS} value={settings.paginationSize} dispatch={dispatch}/>
         {
-          settings.ranges.map((range) => {
-            return range.isLoading
-              ? <Center key={range.id + "-id-loader"}><Loader /></Center>
-              : range.error
-                ? <ErrorMessage key={range.id + "-id-error"}>{ JSON.stringify(range.error, null, 2) }</ErrorMessage>
-                : range.max
-                  ? <MinMaxSelector dispatch={dispatch} range={{ ...range }}>{range.title}</MinMaxSelector>
-                  : <ErrorMessage key={range.id + "-id-not-max"}>Не удалось загрузить данные</ErrorMessage>;
-            {/*<RangeSelector key={range.id + "-id-selector"} range={{ ...range }} dispatch={dispatch}>{range.title}</RangeSelector>*/}
+          filterableFields.map((field) => {
+            const rangeName = field + "Range";
+            const rangeLink = settings[field + "Range"];
+
+            return settings[rangeName].isLoading
+              ? <Center key={rangeName + "-id-loader"}><Loader /></Center>
+              : rangeLink.error
+                ? <ErrorMessage key={rangeName + "-id-error"}>{ JSON.stringify(rangeLink.error, null, 2) }</ErrorMessage>
+                : rangeLink.max
+                  ? <RangeSelector field={field} key={rangeName + "-id-selector"} settings={rangeLink} dispatch={dispatch} type={rangeName}>{rangeLink.title}</RangeSelector>
+                  : <ErrorMessage key={rangeName + "-id-not-max"}>Не удалось загрузить данные</ErrorMessage>;
           })
         }
         <NativeSelect
