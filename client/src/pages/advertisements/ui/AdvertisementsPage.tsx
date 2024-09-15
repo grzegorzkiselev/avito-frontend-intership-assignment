@@ -1,85 +1,102 @@
 import { Button, Center, Loader, Modal, NativeSelect, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useEffect, useReducer } from "react";
+import { useEffect, useLayoutEffect, useReducer } from "react";
 import { AppSlots } from "../../../app";
 import { Advertisement, AdvertisementCard, CreateUpdateAdvertisementCard } from "../../../entities";
-import { ADVERTISEMENTS_PROPS, DEFAULT_PAGINATION_OPTIONS, ErrorMessage, getMinMaxValues } from "../../../shared";
-import { PaginationSelector, Range, RangeSelector, Search, SuspendedList } from "../../../widgets";
-import { filterableFields, initialSettings, reducer, sortConfig, updateMinMaxValues, useAdvertisements } from "../model";
+import { DEFAULT_PAGINATION_OPTIONS, ErrorMessage } from "../../../shared";
+import { PaginationSelector, RangeSelector, Search, SuspendedList } from "../../../widgets";
+import { MinMaxSelector, PaginationSelector, Search, SuspendedList } from "../../../widgets";
+import { AdvertisementsPageParams, useAdvertisements } from "../model";
 
 const advertisementMapper = (advertisement: Advertisement) => <AdvertisementCard {...advertisement} key={advertisement.id} />;
+const buildSearchFunction = (query, collection) => {
+  return () => {
+    const searchReg = new RegExp(query, "i");
+    return collection.filter((item) => {
+      return item.name.toLowerCase().match(searchReg);
+    });
+  };
+};
 
 export const AdvertisementsPage = () => {
-  const [settings, dispatch] = useReducer(reducer, initialSettings);
+  const pageParams = new AdvertisementsPageParams();
+  const [settings, dispatch] = useReducer(pageParams.reducer, pageParams);
+
+  /** I use uncontrolled components for ranges and query
+    * and when I drop values, they stays the same
+    * need to figure out, how to deal with it.
+    * First idea — useRef, we can initialize useRef for each range.
+    * But want we?
+    */
+  // const reset = () => {
+  //   dispatch({ type: "resetRanges" });
+  //   dispatch({ type: "resetSort" });
+  //   dispatch({ type: "resetQuery" });
+  //   dispatch({ type: "reset" });
+  // };
+
+  useEffect(() => {
+    settings.query = settings.query;
+  }, [settings.query]);
+
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
 
-  filterableFields.forEach((field) => {
-    const value = settings[field + "Range"] as Range;
-    const { minValueItem, maxValueItem, isMinMaxValuesLoading, minMaxValueError } = getMinMaxValues(ADVERTISEMENTS_PROPS.endpoint, field);
-    value.isLoading = isMinMaxValuesLoading;
-    value.error = minMaxValueError;
-    updateMinMaxValues(isMinMaxValuesLoading, minMaxValueError, { minValueItem, maxValueItem, field, rangeLink: value });
-  });
-
   const { data, allItems, isLoading, isAllItemsLoading, error, allItemsError } = useAdvertisements(settings);
-  useEffect(() => {
-    if (!isLoading && !error && data) {
+  useLayoutEffect(() => {
+    if (
+      !isLoading
+      && !error
+      && data
+    ) {
       dispatch({ type: "pagesCount", value: data.pages });
+      dispatch({ type: "initialPagesCount", value: data.pages });
     }
-  }, [data, isLoading]);
+  }, [data, isLoading, error]);
 
-  /** @todo reuse this logic */
-  useEffect(() => {
-    if (!isLoading && !error && data) {
-      let pagesCount = data.pages;
+  const handleSearchChange = (event: string) => {
+    const actionValue = {
+      query: event,
+      filterFunction: buildSearchFunction(event, allItems),
+    };
 
-      if (
-        settings.query
-        && settings.query.length > 2
-        && !isAllItemsLoading
-        && !allItemsError
-      ) {
-        const searchReg = new RegExp(settings.query, "i");
-        const filteredAdvertisements = allItems.filter((advertisement) => {
-          return advertisement.name.toLowerCase().match(searchReg);
-        });
-        pagesCount = Math.ceil(filteredAdvertisements.length / settings.paginationSize) || 1;
-        dispatch({ type: "filteredAdvertisements", value: filteredAdvertisements });
-
-        if (settings.page > pagesCount) {
-          dispatch({ type: "page", value: pagesCount });
-        }
-      } else {
-        settings.filteredAdvertisements = null;
-      }
-
-      dispatch({ type: "pagesCount", value: pagesCount });
+    if (
+      !isAllItemsLoading && !allItemsError
+    ) {
+      dispatch({
+        type: "query",
+        value: actionValue,
+      });
     }
-  }, [data, allItems, isLoading, isAllItemsLoading, settings.query]);
+  };
 
-  /** @duplicate ¹ */
-  const first = (settings.page - 1) * settings.paginationSize;
-  const last = first + settings.paginationSize;
+  useLayoutEffect(() => {
+    if (!isAllItemsLoading && !allItemsError && allItems) {
+      handleSearchChange(settings.query);
+    }
+  }, [isAllItemsLoading, allItemsError, allItems]);
 
   return <AppSlots
     adaptiveSidebar={
       <Stack>
         <PaginationSelector paginationOptions={DEFAULT_PAGINATION_OPTIONS} value={settings.paginationSize} dispatch={dispatch}/>
         {
-          filterableFields.map((field) => {
-            const rangeName = field + "Range";
-            const rangeLink = settings[field + "Range"];
-
-            return settings[rangeName].isLoading
-              ? <Center key={rangeName + "-id-loader"}><Loader /></Center>
-              : rangeLink.error
-                ? <ErrorMessage key={rangeName + "-id-error"}>{ JSON.stringify(rangeLink.error, null, 2) }</ErrorMessage>
-                : rangeLink.max
-                  ? <RangeSelector field={field} key={rangeName + "-id-selector"} settings={rangeLink} dispatch={dispatch} type={rangeName}>{rangeLink.title}</RangeSelector>
-                  : <ErrorMessage key={rangeName + "-id-not-max"}>Не удалось загрузить данные</ErrorMessage>;
+          settings.ranges.map((range) => {
+            return range.isLoading
+              ? <Center key={range.id + "-id-loader"}><Loader /></Center>
+              : range.error
+                ? <ErrorMessage key={range.id + "-id-error"}>{ JSON.stringify(range.error, null, 2) }</ErrorMessage>
+                : range.max
+                  ? <MinMaxSelector dispatch={dispatch} range={{ ...range }}>{range.title}</MinMaxSelector>
+                  : <ErrorMessage key={range.id + "-id-not-max"}>Не удалось загрузить данные</ErrorMessage>;
+            {/*<RangeSelector key={range.id + "-id-selector"} range={{ ...range }} dispatch={dispatch}>{range.title}</RangeSelector>*/}
           })
         }
-        <NativeSelect value={settings.sortLabel} onChange={(event) => dispatch({ type: "sortLabel", value: event })} label="Сортировать" data={Object.getOwnPropertyNames(sortConfig)} />
+        <NativeSelect
+          value={settings.sortLabel}
+          onChange={(event) => dispatch({ type: "sortLabel", value: event })}
+          label="Сортировать"
+          data={Object.keys(settings.sortConfig)}
+        />
       </Stack>
     }
     sidebar={
@@ -88,25 +105,34 @@ export const AdvertisementsPage = () => {
           <CreateUpdateAdvertisementCard close={closeModal} />
         </Modal>
 
+        {/* <Button onClick={reset}>Сбросить фильтр</Button> */}
+
         <Button onClick={openModal}>Создать объявление</Button>
       </>
     }
   >
     <Stack>
-      <Search suggestions={settings.searchHistory} type="query" value={settings.query} dispatch={dispatch} />
+      <Search
+        suggestions={settings.searchHistory}
+        type="query"
+        value={settings.query}
+        onSearchChange={handleSearchChange}
+      />
       <SuspendedList
         settings={settings}
         dispatch={dispatch}
         mapper={advertisementMapper}
-        isLoading={isLoading}
+        isLoading={
+          isLoading
+          || isAllItemsLoading
+        }
         error={error}
         items={
           settings.query
-            ? settings?.filteredAdvertisements?.slice(first, last)
+            ? settings?.filteredItems?.getSliceForCurrentPage()
             : data?.data
         }
       />
     </Stack>
-
   </AppSlots>;
 };
