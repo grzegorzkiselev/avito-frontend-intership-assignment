@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAdvertisements } from "../../../entities";
 import { ADVERTISEMENTS_PROPS, DEFAULT_PAGINATION_SIZE } from "../../../shared";
+import { AdvertisementsPageParams } from "./filterSettings";
 
-export const useAdvertisements = ({ page, paginationSize, currentSortOption, ranges }: typeof initialSettings) => {
+export const useAdvertisements = ({ page, paginationSize, currentSortOption, ranges }: AdvertisementsPageParams) => {
   const queryClient = useQueryClient();
   const params = new URLSearchParams();
 
@@ -26,7 +27,7 @@ export const useAdvertisements = ({ page, paginationSize, currentSortOption, ran
     error: allItemsError,
   } = useQuery({
     queryKey: [ADVERTISEMENTS_PROPS.endpoint, paramsWithoutPagination],
-    queryFn: () => getAdvertisements("?" + paramsWithoutPagination),
+    queryFn: () => getAdvertisements<false>("?" + paramsWithoutPagination),
   });
 
   paginationSize = paginationSize ?? DEFAULT_PAGINATION_SIZE;
@@ -39,7 +40,7 @@ export const useAdvertisements = ({ page, paginationSize, currentSortOption, ran
     error,
   } = useQuery({
     queryKey: [ADVERTISEMENTS_PROPS.endpoint, params.toString()],
-    queryFn: () => getAdvertisements("?" + params.toString()),
+    queryFn: () => getAdvertisements<true>("?" + params.toString()),
   });
 
   const baseParamsEntries = params.entries();
@@ -52,7 +53,7 @@ export const useAdvertisements = ({ page, paginationSize, currentSortOption, ran
 
   queryClient.prefetchQuery({
     queryKey: [ADVERTISEMENTS_PROPS.endpoint, nextPageParams.toString()],
-    queryFn: () => getAdvertisements("?" + nextPageParams.toString()),
+    queryFn: () => getAdvertisements<true>("?" + nextPageParams.toString()),
   });
 
   if (page > 1) {
@@ -64,7 +65,7 @@ export const useAdvertisements = ({ page, paginationSize, currentSortOption, ran
 
     queryClient.prefetchQuery({
       queryKey: [ADVERTISEMENTS_PROPS.endpoint, previousPageParams.toString()],
-      queryFn: () => getAdvertisements("?" + previousPageParams.toString()),
+      queryFn: () => getAdvertisements<true>("?" + previousPageParams.toString()),
     });
   }
 

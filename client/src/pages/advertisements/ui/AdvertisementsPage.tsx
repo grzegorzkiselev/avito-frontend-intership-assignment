@@ -1,15 +1,14 @@
 import { Button, Center, Loader, Modal, NativeSelect, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useEffect, useLayoutEffect, useReducer } from "react";
+import { useLayoutEffect, useReducer } from "react";
 import { AppSlots } from "../../../app";
 import { Advertisement, AdvertisementCard, CreateUpdateAdvertisementCard } from "../../../entities";
 import { DEFAULT_PAGINATION_OPTIONS, ErrorMessage } from "../../../shared";
-import { PaginationSelector, RangeSelector, Search, SuspendedList } from "../../../widgets";
 import { MinMaxSelector, PaginationSelector, Search, SuspendedList } from "../../../widgets";
 import { AdvertisementsPageParams, useAdvertisements } from "../model";
 
 const advertisementMapper = (advertisement: Advertisement) => <AdvertisementCard {...advertisement} key={advertisement.id} />;
-const buildSearchFunction = (query, collection) => {
+const buildSearchFunction = (query: string, collection: Advertisement[]) => {
   return () => {
     const searchReg = new RegExp(query, "i");
     return collection.filter((item) => {
@@ -21,6 +20,7 @@ const buildSearchFunction = (query, collection) => {
 export const AdvertisementsPage = () => {
   const pageParams = new AdvertisementsPageParams();
   const [settings, dispatch] = useReducer(pageParams.reducer, pageParams);
+  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
 
   /** I use uncontrolled components for ranges and query
     * and when I drop values, they stays the same
@@ -35,45 +35,39 @@ export const AdvertisementsPage = () => {
   //   dispatch({ type: "reset" });
   // };
 
-  useEffect(() => {
-    settings.query = settings.query;
-  }, [settings.query]);
-
-  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
-
   const { data, allItems, isLoading, isAllItemsLoading, error, allItemsError } = useAdvertisements(settings);
-  useLayoutEffect(() => {
-    if (
-      !isLoading
-      && !error
-      && data
-    ) {
-      dispatch({ type: "pagesCount", value: data.pages });
-      dispatch({ type: "initialPagesCount", value: data.pages });
-    }
-  }, [data, isLoading, error]);
-
   const handleSearchChange = (event: string) => {
-    const actionValue = {
-      query: event,
-      filterFunction: buildSearchFunction(event, allItems),
-    };
-
     if (
-      !isAllItemsLoading && !allItemsError
+      !isAllItemsLoading && !allItemsError && allItems
     ) {
-      dispatch({
-        type: "query",
-        value: actionValue,
-      });
+      const actionValue = {
+        query: event,
+        filterFunction: buildSearchFunction(event, allItems),
+      };
+
+      dispatch({ type: "query", value: actionValue });
     }
   };
 
   useLayoutEffect(() => {
-    if (!isAllItemsLoading && !allItemsError && allItems) {
+    if (
+      data
+       && !settings.query
+    ) {
+      dispatch({ type: "pagesCount", value: data.pages });
+      dispatch({ type: "initialPagesCount", value: data.pages });
+    } else if (allItems) {
       handleSearchChange(settings.query);
     }
-  }, [isAllItemsLoading, allItemsError, allItems]);
+  }, [
+    data,
+    allItems,
+    isLoading,
+    isAllItemsLoading,
+    error,
+    allItemsError,
+    settings.query,
+  ]);
 
   return <AppSlots
     adaptiveSidebar={
@@ -114,7 +108,6 @@ export const AdvertisementsPage = () => {
     <Stack>
       <Search
         suggestions={settings.searchHistory}
-        type="query"
         value={settings.query}
         onSearchChange={handleSearchChange}
       />
@@ -129,7 +122,7 @@ export const AdvertisementsPage = () => {
         error={error}
         items={
           settings.query
-            ? settings?.filteredItems?.getSliceForCurrentPage()
+            ? settings?.filteredItems?.getSliceForCurrentPage(settings)
             : data?.data
         }
       />
