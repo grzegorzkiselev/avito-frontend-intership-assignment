@@ -16,7 +16,7 @@ export const AdvertisementCard = ({ id, name, description, price, views, likes, 
         {
           (
             (children) => {
-              return bottom ? children : <Link to={`/advertisements/${id}`} state={{ refferer: window.location.href }}>{children}</Link>;
+              return bottom ? children : <Link to={`/advertisements/${id}`}>{children}</Link>;
             }
           )(
             <Image src={imageUrl || ""} alt={name} height={360} />,
