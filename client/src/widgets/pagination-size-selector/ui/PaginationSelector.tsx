@@ -1,8 +1,12 @@
 import { SegmentedControl, Text } from "@mantine/core";
+import { Dispatch } from "react";
 
-export const PaginationSelector = ({ value, dispatch, paginationOptions }) => {
-  const handlePaginationSizeChange = (event) => {
-    dispatch({ type: "paginationSize", value: event });
+export const PaginationSelector = (
+  { value, paginationOptions, dispatch }
+  : { value: number, paginationOptions: string[], dispatch: Dispatch<unknown> },
+) => {
+  const handlePaginationSizeChange = (event: string) => {
+    dispatch({ type: "paginationSize", value: Number(event) });
   };
 
   return <div style={{ "display": "grid" }}>
@@ -11,7 +15,7 @@ export const PaginationSelector = ({ value, dispatch, paginationOptions }) => {
     </Text>
     <SegmentedControl
       style={{ "width": "auto" }}
-      value={value.toString()}
+      value={String(value)}
       onChange={handlePaginationSizeChange}
       data={paginationOptions}
     />

@@ -1,9 +1,10 @@
-import { ADVERTISEMENTS_PROPS } from "../../../shared";
-import { PaginatedResponse } from "../../../shared/api/json-server/PaginatedResponse";
+import { ADVERTISEMENTS_PROPS, PaginatedResponse } from "../../../shared";
 import { getServiceAxios } from "../../../shared/api/service-axios";
 import { Advertisement } from "../model";
 
-export const getAdvertisements = (params: string): Promise<PaginatedResponse<Advertisement[]>> => {
+// (P["paged"] ? Promise<PaginatedResponse<Advertisement[]>> : Promise<Advertisement[]>)
+
+export const getAdvertisements = <PAGED extends boolean>(params: string): PAGED extends true ? Promise<PaginatedResponse<Advertisement[]>> : Promise<Advertisement[]> => {
   return getServiceAxios()
     .get(ADVERTISEMENTS_PROPS.endpoint + params)
     .then(({ data }) => data);

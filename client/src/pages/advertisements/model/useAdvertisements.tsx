@@ -1,22 +1,23 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAdvertisements } from "../../../entities";
 import { ADVERTISEMENTS_PROPS, DEFAULT_PAGINATION_SIZE } from "../../../shared";
-import { initialSettings } from "./filterSettings";
+import { AdvertisementsPageParams } from "./filterSettings";
 
-export const useAdvertisements = ({ page, paginationSize, sort, priceRange, likesRange, viewsRange }: typeof initialSettings) => {
+export const useAdvertisements = ({ page, paginationSize, currentSortOption, ranges }: AdvertisementsPageParams) => {
   const queryClient = useQueryClient();
   const params = new URLSearchParams();
 
-  priceRange?.min && params.set("price_gte", "" + priceRange.min);
-  Number.isFinite(priceRange?.max) && params.set("price_lte", "" + priceRange.max);
+  ranges?.forEach((range) => {
+    range?.min && params.set(range.field + "_gte", "" + range.min);
+    Number.isFinite(range?.max) && params.set(range.field + "_lte", "" + range.max);
+  });
 
-  likesRange?.min && params.set("likes_gte", "" + likesRange.min);
-  Number.isFinite(likesRange?.max) && params.set("likes_lte", "" + likesRange.max);
-
-  viewsRange?.min && params.set("views_gte", "" + viewsRange.min);
-  Number.isFinite(viewsRange?.max) && params.set("views_lte", "" + viewsRange.max);
-
-  sort && sort.by && params.set("_sort", (sort.direction === "desc" ? "-" : "") + sort.by);
+  currentSortOption
+  && currentSortOption.by
+  && params.set(
+    "_sort",
+    (currentSortOption.direction === "desc" ? "-" : "") + currentSortOption.by,
+  );
 
   const paramsWithoutPagination = params.toString();
 
@@ -26,7 +27,7 @@ export const useAdvertisements = ({ page, paginationSize, sort, priceRange, like
     error: allItemsError,
   } = useQuery({
     queryKey: [ADVERTISEMENTS_PROPS.endpoint, paramsWithoutPagination],
-    queryFn: () => getAdvertisements("?" + paramsWithoutPagination),
+    queryFn: () => getAdvertisements<false>("?" + paramsWithoutPagination),
   });
 
   paginationSize = paginationSize ?? DEFAULT_PAGINATION_SIZE;
@@ -39,7 +40,7 @@ export const useAdvertisements = ({ page, paginationSize, sort, priceRange, like
     error,
   } = useQuery({
     queryKey: [ADVERTISEMENTS_PROPS.endpoint, params.toString()],
-    queryFn: () => getAdvertisements("?" + params.toString()),
+    queryFn: () => getAdvertisements<true>("?" + params.toString()),
   });
 
   const baseParamsEntries = params.entries();
@@ -52,7 +53,7 @@ export const useAdvertisements = ({ page, paginationSize, sort, priceRange, like
 
   queryClient.prefetchQuery({
     queryKey: [ADVERTISEMENTS_PROPS.endpoint, nextPageParams.toString()],
-    queryFn: () => getAdvertisements("?" + nextPageParams.toString()),
+    queryFn: () => getAdvertisements<true>("?" + nextPageParams.toString()),
   });
 
   if (page > 1) {
@@ -64,7 +65,7 @@ export const useAdvertisements = ({ page, paginationSize, sort, priceRange, like
 
     queryClient.prefetchQuery({
       queryKey: [ADVERTISEMENTS_PROPS.endpoint, previousPageParams.toString()],
-      queryFn: () => getAdvertisements("?" + previousPageParams.toString()),
+      queryFn: () => getAdvertisements<true>("?" + previousPageParams.toString()),
     });
   }
 

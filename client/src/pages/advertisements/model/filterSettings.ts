@@ -1,21 +1,8 @@
 import { Advertisement } from "../../../entities";
-import { DEFAULT_PAGINATION_SIZE } from "../../../shared";
-import { Range } from "../../../widgets";
+import { PageParams, SortConfig } from "../../../widgets";
+import { createReducer, defaultActions } from "../../../widgets/page-params";
 
-export type SortDirection = "asc" | "desc";
-
-export const filterableFields = ["price", "views", "likes"] as const;
-
-type sortOption = {
-  by: filterableFields[number],
-  direction: SortDirection
-};
-
-export type SortAction = {
-  [key: string]: sortOption
-};
-
-export const sortConfig: SortAction = {
+export const sortConfig: SortConfig = {
   "Сначала дешевле": {
     by : "price",
     direction : "asc",
@@ -42,113 +29,102 @@ export const sortConfig: SortAction = {
   },
 } as const;
 
+const ranges = [
+  {
+    id: "priceRange",
+    field: "price",
+    title: "Диапазон цен",
+    isLoading: true,
+    error: null,
+    minAvailable: 0,
+    maxAvailable: Infinity,
+    min: 0,
+    max: Infinity,
+  },
+  {
+    id: "viewsRange",
+    field: "views",
+    title: "Диапазон просмотров",
+    isLoading: true,
+    error: null,
+    minAvailable: 0,
+    maxAvailable: Infinity,
+    min: 0,
+    max: Infinity,
+  },
+  {
+    id: "likesRange",
+    field: "likes",
+    title: "Диапазон лайков",
+    isLoading: true,
+    error: null,
+    minAvailable: 0,
+    maxAvailable: Infinity,
+    min: 0,
+    max: Infinity,
+  },
+];
 
-const currentUrl = new URL(window.location.href);
-
-export const initialSettings = (() => {
-  const prepare: {
+function queryAction(settings: AdvertisementsPageParams, action: {
+  type: "query",
+  value: {
     query: string,
-    searchHistory: string[],
-    page: number,
-    paginationSize: number,
-    pagesCount: number,
-    /** @todo rewrite duplicates as template literal types */
-    // [key: `${typeof filterableFields[number]}Range`]: Range,
-    priceRange: Range,
-    viewsRange: Range,
-    likesRange: Range,
-    sortLabel: keyof typeof sortConfig,
-    sort: sortOption,
-    filteredAdvertisements: Advertisement[] | null
-  } = {
-    query: currentUrl.searchParams.get("query") || "",
-    searchHistory: (() => {
+    filterFunction: () => Advertisement[]
+  }
+}) {
+  settings[action.type] = action.value.query;
+
+  settings.currentUrl.searchParams.set(action.type, action.value.query);
+
+  if (action.value.query.length < 1) {
+    settings.filteredItems.items.length = 0;
+    settings.pagesCount = settings.initialPagesCount;
+    return;
+  }
+
+  const filteredItems = action.value.filterFunction();
+  settings.filteredItems.items = filteredItems;
+  settings.pagesCount = Math.ceil(filteredItems.length / settings.paginationSize) || 1;
+
+  if (settings.pagesCount < settings.page) {
+    settings.page = settings.pagesCount;
+  }
+
+  if (
+    typeof action.value.query !== "string"
+    || action.value.query.length < 2
+  ) {
+    return;
+  }
+
+  !settings.searchHistory.includes(action.value.query) && settings.searchHistory.unshift(action.value.query);
+  settings.searchHistory.length = Math.min(5, settings.searchHistory.length);
+  localStorage.setItem("searchHistory", JSON.stringify(settings.searchHistory));
+}
+
+const actions = {
+  ...defaultActions,
+  query: queryAction,
+};
+
+export class AdvertisementsPageParams extends PageParams {
+  query: string;
+  searchHistory: string[];
+
+  constructor() {
+    super();
+    this.initRanges(ranges);
+    this.initSort(sortConfig);
+
+    this.query = this.currentUrl.searchParams.get("query") || "",
+    this.searchHistory = (() => {
       try {
         return JSON.parse(localStorage.getItem("searchHistory") || "") || [];
       } catch(error) {
         return [];
       }
-    })(),
-    page: Number(currentUrl.searchParams.get("page")) || 1,
-    paginationSize: Number(currentUrl.searchParams.get("paginationSize")) || DEFAULT_PAGINATION_SIZE,
-    pagesCount: 1,
-    priceRange: {
-      title: "Диапазон цен",
-      isLoading: true,
-      error: null,
-      minAvailable: 0,
-      maxAvailable: Infinity,
-      min: Number(currentUrl.searchParams.get("min-priceRange")) || 0,
-      max: Number(currentUrl.searchParams.get("max-priceRange")) || Infinity,
-    },
-    viewsRange: {
-      title: "Диапазон просмотров",
-      isLoading: true,
-      error: null,
-      minAvailable: 0,
-      maxAvailable: Infinity,
-      min: Number(currentUrl.searchParams.get("min-viewsRange")) || 0,
-      max: Number(currentUrl.searchParams.get("max-viewsRange")) || Infinity,
-    },
-    likesRange: {
-      title: "Диапазон лайков",
-      isLoading: true,
-      error: null,
-      minAvailable: 0,
-      maxAvailable: Infinity,
-      min: Number(currentUrl.searchParams.get("min-likesRange")) || 0,
-      max: Number(currentUrl.searchParams.get("max-likesRange")) || Infinity,
-    },
-    sortLabel: currentUrl.searchParams.get("sortLabel") as keyof typeof sortConfig || Object.keys(sortConfig)[0],
-    sort: Object.values(sortConfig)[0],
-    filteredAdvertisements: null,
-  };
-  prepare.sort = sortConfig[prepare.sortLabel];
+    })();
 
-  return prepare;
-})();
-
-export const reducer = <S extends typeof initialSettings, T extends keyof typeof initialSettings>(settings: S, action: { type: T, value: S[T] }) => {
-  if (action.type === "sortLabel") {
-    settings.sortLabel = (Array.from(action.value.target.children).find((element) => element.selected)).value;
-    currentUrl.searchParams.set("sortLabel", settings.sortLabel);
-    settings.sort = sortConfig[settings.sortLabel];
-    settings.page = 1;
-  } else {
-    settings[action.type] = action.value;
-    if (action.type === "query" && typeof action.value === "string" && action.value.length > 2) {
-      !settings.searchHistory.includes(action.value) && settings.searchHistory.unshift(action.value);
-      settings.searchHistory.length = Math.min(5, settings.searchHistory.length);
-      localStorage.setItem("searchHistory", JSON.stringify(settings.searchHistory));
-    }
-    if (action.type.endsWith("Range")) {
-      const rangeLink = settings[action.type] as Range;
-      currentUrl.searchParams.set("max-" + action.type, "" + rangeLink.max);
-    }
+    this.reducer = createReducer(actions);
   }
-
-  if (action.type === "page"
-    || action.type === "paginationSize"
-    || action.type === "query"
-  ) {
-    currentUrl.searchParams.set(action.type, "" + settings[action.type]);
-  }
-
-  /** workarount for happy-dom */
-  try {
-    window?.history?.replaceState(null, "", currentUrl);
-  } catch(error) {
-    console.error(error);
-  }
-
-  return { ...settings };
-};
-
-export const updateMinMaxValues = <F extends string>(isLoading: boolean, error: unknown, { maxValueItem, field, rangeLink }: { maxValueItem: { data: { [key in F]: number }[] }, field: F, rangeLink: Range }) => {
-  if (!isLoading && !error) {
-    rangeLink.maxAvailable = maxValueItem?.data?.[0]?.[field];
-    if (rangeLink.max === Infinity) {
-      rangeLink.max = rangeLink.maxAvailable;
-    }
-  }
-};
+}

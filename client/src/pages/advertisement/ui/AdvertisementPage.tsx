@@ -3,13 +3,13 @@ import { useDisclosure } from "@mantine/hooks";
 import { Link, useParams } from "react-router-dom";
 import { AppSlots } from "../../../app/layout";
 import { AdvertisementCard, CreateUpdateAdvertisementCard } from "../../../entities";
-import { ADVERTISEMENTS_PROPS, CenteredLoader, ORDERS_PROPS } from "../../../shared";
+import { ADVERTISEMENTS_PROPS, CenteredLoader, ErrorMessage, ORDERS_PROPS } from "../../../shared";
 import { useSingleAdvertisement } from "../model/useSingleAdvertisement";
 
 export const AdvertisementPage = () => {
   const { id } = useParams();
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
-  const { data, isLoading } = useSingleAdvertisement({ id } as { id: string });
+  const { data, isLoading, error } = useSingleAdvertisement({ id } as { id: string });
 
   return <AppSlots
     links={
@@ -30,7 +30,10 @@ export const AdvertisementPage = () => {
     {
       isLoading
         ? <CenteredLoader />
-        : <AdvertisementCard bottom={true} { ...data } />
+        : error
+          ? <ErrorMessage>{ JSON.stringify(error, null, 2) }</ErrorMessage>
+          : data ? <AdvertisementCard bottom={true} { ...data } />
+            : <ErrorMessage>Не удалось загрузить объявление</ErrorMessage>
     }
   </AppSlots>;
 };

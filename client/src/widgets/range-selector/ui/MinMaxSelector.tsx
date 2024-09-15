@@ -3,6 +3,10 @@ import { useDebouncedCallback } from "@mantine/hooks";
 import { Dispatch, ReactNode } from "react";
 import { Range } from "../model";
 
+const style = {
+  "flexGrow": "1",
+};
+
 export const MinMaxSelector = (
   { children, dispatch, range }
   : {
@@ -27,10 +31,26 @@ export const MinMaxSelector = (
     <Flex gap={8}>
       <NumberInput onChange={(event) => {
         handleRangeChange(event, "min");
-      }} size="xs" placeholder={String(range.minAvailable)} min={range.minAvailable} max={range.maxAvailable - minRange} defaultValue={range.minAvailable}/>
+      }}
+      style={style}
+      size="xs"
+      placeholder={String(range.minAvailable)}
+      min={range.minAvailable}
+      max={range.maxAvailable - minRange}
+      defaultValue={range.minAvailable}
+      value={range.min}
+      />
       <NumberInput onChange={(event) => {
         handleRangeChange(event, "max");
-      }} size="xs" placeholder={String(range.maxAvailable)} min={range.minAvailable + minRange} max={range.maxAvailable} defaultValue={range.maxAvailable}/>
+      }}
+      style={style}
+      size="xs"
+      placeholder={String(range.maxAvailable)}
+      min={range.minAvailable + minRange}
+      max={range.maxAvailable}
+      defaultValue={range.maxAvailable}
+      value={range.max}
+      />
     </Flex>
   </div>;
 };

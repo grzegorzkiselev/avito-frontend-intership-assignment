@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ADVERTISEMENTS_PROPS, getServiceAxios } from "../../../shared";
 
-export const getMinMaxValues = (baseUrl: string, field: string) => {
+export const useGetMinMaxValues = (baseUrl: string, field: string) => {
   // const minEndpoint = new URL(baseUrl);
   // minEndpoint.searchParams.set("_limit", "" + 1);
   // minEndpoint.searchParams.set("_sort", "" + field);

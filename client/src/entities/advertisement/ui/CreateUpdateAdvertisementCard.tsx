@@ -24,7 +24,7 @@ const popstateHandler = () => {
   window.location.href = urlToClean.href;
 };
 
-export const CreateUpdateAdvertisementCard = ({ advertisement, close }: { advertisement?: Advertisement, close: () => void }) => {
+export const CreateUpdateAdvertisementCard = ({ advertisement, close }: { advertisement?: Partial<Advertisement>, close: () => void }) => {
   let mutate = null;
   let isPending = null;
 
