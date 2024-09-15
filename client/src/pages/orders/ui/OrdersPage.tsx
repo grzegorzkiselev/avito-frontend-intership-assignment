@@ -1,5 +1,5 @@
 import { NativeSelect, Stack } from "@mantine/core";
-import { useEffect, useReducer, useState } from "react";
+import { useLayoutEffect, useReducer, useState } from "react";
 import { AppSlots } from "../../../app";
 import { OrderCard } from "../../../entities";
 import { DEFAULT_PAGINATION_OPTIONS } from "../../../shared";
@@ -10,7 +10,7 @@ const mapper = (order) => {
   return <OrderCard {...order} key={"order-" + order.id}/>;
 };
 
-const findIncludes = (forItem, allItems, doneSignal) => {
+const findIncludes = (forItem, allItems) => {
   return () => {
     const filteredOrders = [];
     for (const order of allItems) {
@@ -21,19 +21,9 @@ const findIncludes = (forItem, allItems, doneSignal) => {
         }
       }
     }
-
-    doneSignal();
     return filteredOrders;
   };
-
-  // const pagesCount = Math.ceil(filteredOrders.length / settings.paginationSize) || 1;
-  // dispatch({ type: "pagesCount", value: pagesCount });
-  // dispatch({ type: "filteredOrders", value: filteredOrders });
-  // setIsCustomLoading(() => false);
-  // clearTimeout(timerId);
 };
-
-// const timerId = null;
 
 export const OrdersPage = () => {
   const pageParams = new OrdersPageParams();
@@ -41,37 +31,43 @@ export const OrdersPage = () => {
   const { data, isLoading, error, allItems, isAllItemsLoading, allItemsError } = useOrders(settings);
   const [isCustomLoading, setIsCustomLoading] = useState(true);
 
-  if (!settings.forItem) {
-    if (!isLoading && !error && data) {
-      settings.pagesCount = data.pages;
-    }
-  }
-
-  useEffect(() => {
-    if (
-      settings.forItem
-      && !isAllItemsLoading
-      && !allItemsError
-    ) {
-      setIsCustomLoading(() => true);
-      dispatch({
-        type: "forItem",
-        value: {
-          filterFunction: findIncludes(
-            settings.forItem,
-            allItems,
-            () => setIsCustomLoading(() => false),
-          ),
-        } });
-    }
-  }, [allItems, isAllItemsLoading, allItemsError]);
-
   const handleSortChange = (event) => {
     dispatch({ type: "sortLabel", value: event });
   };
   const handleStatusChanged = (event) => {
     dispatch({ type: "statusLabel", value: event });
   };
+
+  useLayoutEffect(() => {
+    if (
+      !settings.forItem
+       && !isLoading
+       && !error
+       && data
+    ) {
+      dispatch({ type: "pagesCount", value: data.pages });
+      dispatch({ type: "initialPagesCount", value: data.pages });
+    } else
+      if (
+        !isAllItemsLoading
+        && !allItemsError
+        && allItems
+      ) {
+        setIsCustomLoading(() => true);
+        dispatch({
+          type: "forItem",
+          value: {
+            doneSignal: () => setIsCustomLoading(() => false),
+            filterFunction: findIncludes(
+              settings.forItem,
+              allItems,
+            ),
+          } });
+      }
+  }, [
+    data,
+    allItems,
+  ]);
 
   return <AppSlots
     adaptiveSidebar={
@@ -109,7 +105,7 @@ export const OrdersPage = () => {
         }
         items={
           settings.forItem
-            ? settings.filteredItems.getSliceForCurrentPage()
+            ? settings.filteredItems.getSliceForCurrentPage(settings)
             : data?.data
         }
       />

@@ -4,8 +4,6 @@ import { getOrders } from "../api";
 
 export const useOrders = ({ page, paginationSize, currentSortOption, status }) => {
   const params = new URLSearchParams();
-
-  console.log(currentSortOption);
   currentSortOption && currentSortOption.by && params.set(
     "_sort",
     (currentSortOption.direction === "desc" ? "-" : "") + currentSortOption.by,
@@ -14,7 +12,7 @@ export const useOrders = ({ page, paginationSize, currentSortOption, status }) =
 
   const paramsWithoutPagination = params.toString();
 
-  console.log(paramsWithoutPagination);
+  /** @fixme deduplicate result params */
 
   const {
     data: allItems,
