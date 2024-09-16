@@ -12,7 +12,7 @@ export const useCreateAdvertisement = () => {
       queryClient.removeQueries({ queryKey: [ADVERTISEMENTS_PROPS.endpoint] });
 
       notifications.show({
-        title: "Объявление успешно обновлено",
+        title: "Изменения сохранены",
         message: "",
       });
     },
@@ -20,7 +20,7 @@ export const useCreateAdvertisement = () => {
       console.error(error);
       notifications.show({
         color: "red",
-        title: "Не удалось обновить объявление",
+        title: "Произошла ошибка",
         message: "Удачи разобраться: " + error?.message,
       });
     },
