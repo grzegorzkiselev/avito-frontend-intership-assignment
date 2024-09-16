@@ -4,12 +4,12 @@ import { Outlet } from "react-router-dom";
 import { MediaQueryContext } from "../../providers";
 import classes from "./App.module.css";
 
-export const AppLayout = () => {
+export const AppLayout = ({ children } = {}) => {
   const isMobile = useContext(MediaQueryContext);
 
   return (
     <Container className={classes.container} px={isMobile ? "xs" : "xl"} pt="xl" pb={px("5rem")}>
-      <Outlet />
+      { children ? children : <Outlet /> }
     </Container>
   );
 };

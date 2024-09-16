@@ -1,5 +1,6 @@
 import { Component } from "react";
 import { ErrorMessage } from "../../../shared";
+import classes from "./ErrorBoundary.module.css";
 
 export class ErrorBoundary extends Component {
   constructor(props) {
@@ -8,12 +9,14 @@ export class ErrorBoundary extends Component {
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true, error: error };
+    return { hasError: true, error: error.toString() };
   }
 
   render() {
     if (this.state.hasError) {
-      return <ErrorMessage>{ JSON.stringify(this.state, null, 2) }</ErrorMessage>;
+      return <div className={classes.wrapper}>
+        <ErrorMessage>{ this.state.error }</ErrorMessage>
+      </div>;
     }
 
     return this.props.children;

@@ -1,0 +1,6 @@
+.wrapper {
+  display: grid;
+  place-content: center;
+  grid-template-rows: auto;
+  min-height: 100svh;
+}
